@@ -50,7 +50,7 @@ export default function PantallaDashboard() {
     <div className="min-h-screen bg-[#F4F3EF] text-[#4A3B32] font-sans antialiased pb-10">
       
       {/* HEADER PRINCIPAL */}
-      <header className="max-w-md mx-auto bg-[#2E3A23] text-[#F4F3EF] p-4 rounded-b-2xl shadow-md flex justify-between items-center">
+      <header className="max-w-md mx-auto bg-[#2E3A23] text-[#F4F4EF] p-4 rounded-b-2xl shadow-md flex justify-between items-center">
         <div className="flex items-center space-x-2">
           <div className="w-8 h-8 rounded-full bg-[#E9967A] flex items-center justify-center font-bold text-sm text-[#4A3B32]">M</div>
           <h1 className="text-xl font-serif font-bold tracking-tight">Munchy</h1>
@@ -67,7 +67,7 @@ export default function PantallaDashboard() {
 
         {/* MASCOTA MUNCHIE */}
         {mostrarMascota && (
-          <div className="bg-[#2E3A23] text-[#F4F3EF] p-5 rounded-2xl border border-[#4A3B32] shadow-lg relative">
+          <div className="bg-[#2E3A23] text-[#F4F4EF] p-5 rounded-2xl border border-[#4A3B32] shadow-lg relative">
             <div className="flex items-start space-x-4">
               <div className="w-12 h-12 bg-[#F4F3EF] rounded-xl flex items-center justify-center text-2xl border border-[#4A3B32]">🦉</div>
               <div className="flex-1 space-y-1">
@@ -93,7 +93,7 @@ export default function PantallaDashboard() {
                   <span className="text-[10px] bg-white text-gray-500 px-2 py-0.5 rounded-full border border-gray-200">{item.categoria}</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <button onClick={() => modificarQuantity(item.id, item.unidad === "pzas" ? -1 : -50)} className="w-7 h-7 bg-white rounded-full border border-gray-300 flex items-center justify-center font-bold text-gray-600 text-xs">-</button>
+                  <button onClick={() => modificarCantidad(item.id, item.black === "pzas" ? -1 : -50)} className="w-7 h-7 bg-white rounded-full border border-gray-300 flex items-center justify-center font-bold text-gray-600 text-xs">-</button>
                   <span className="text-sm font-bold min-w-[50px] text-center text-[#2E3A23]">{item.cantidad} {item.unidad}</span>
                   <button onClick={() => modificarCantidad(item.id, item.unidad === "pzas" ? 1 : 50)} className="w-7 h-7 bg-[#2E3A23] text-white rounded-full flex items-center justify-center font-bold text-xs">+</button>
                 </div>
@@ -101,7 +101,7 @@ export default function PantallaDashboard() {
             ))}
           </div>
 
-          <button onClick={manejarGenerarReceta} className="w-full bg-[#2E3A23] text-[#F4F3EF] py-4 rounded-xl font-bold text-sm shadow-md">
+          <button onClick={manejarGenerarReceta} className="w-full bg-[#2E3A23] text-[#F4F4EF] py-4 rounded-xl font-bold text-sm shadow-md">
             ⚡ GENERAR ANTOJO SALUDABLE
           </button>
         </section>
@@ -116,7 +116,7 @@ export default function PantallaDashboard() {
               </div>
               <span className="text-xs font-semibold bg-white px-2 py-1 rounded-md border border-gray-200">⏱️ {recetaGenerada.tiempo}</span>
             </div>
-            <p className="text-xs bg-[#2E3A23] text-[#F4F3EF] p-2 rounded-lg text-center font-mono">{recetaGenerada.macros}</p>
+            <p className="text-xs bg-[#2E3A23] text-[#F4F4EF] p-2 rounded-lg text-center font-mono">{recetaGenerada.macros}</p>
             <div className="space-y-3">
               <ol className="space-y-2">
                 {recetaGenerada.pasos.map((paso, idx) => (
