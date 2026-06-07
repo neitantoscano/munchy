@@ -55,21 +55,20 @@ export default function PantallaAlergias() {
         <div className="flex-1 h-1 rounded-full bg-olivoClaro opacity-40"></div>
       </div>
 
-      {/* Título */}
+      {/* Título NUEVO */}
       <div className="mb-6">
         <p className="text-xs font-bold uppercase tracking-wider text-cafeTierra opacity-70 mb-2">
           Paso 2 de 3
         </p>
-        <h1 className="font-serif text-3xl text-olivoOscuro leading-tight mb-2">
-          ¿Algo que evitar?
+        <h1 className="font-serif text-2xl text-olivoOscuro leading-tight mb-2">
+          Cosas a las que eres alérgico<br />o tienes prohibido comer
         </h1>
-        <p className="text-base text-olivoOscuro opacity-70 leading-relaxed">
-          Selecciona todas las que apliquen.<br />
-          Munchy nunca te dará recetas con esto.
+        <p className="text-sm text-olivoOscuro opacity-70 leading-relaxed">
+          Selecciona todas las que apliquen. Munchy nunca te dará recetas con esto.
         </p>
       </div>
 
-      {/* Lista de alergias */}
+      {/* Lista */}
       <div className="flex flex-col gap-3 mb-6">
         {alergias.map(a => {
           const activa = seleccionadas.includes(a.id)
@@ -86,12 +85,9 @@ export default function PantallaAlergias() {
                   : '0 2px 12px rgba(0,0,0,0.04)'
               }}
             >
-              {/* Icono */}
               <div 
                 className="w-12 h-12 rounded-xl flex items-center justify-center text-xl flex-shrink-0 transition-all"
-                style={{
-                  background: activa ? '#ffffff' : '#fdeee8'
-                }}
+                style={{ background: activa ? '#ffffff' : '#fdeee8' }}
               >
                 <img 
                   src={`/icons/icon-alergia-${a.id}.png`}
@@ -105,7 +101,6 @@ export default function PantallaAlergias() {
                 />
               </div>
 
-              {/* Texto */}
               <div className="flex-1">
                 <p className="font-semibold text-base text-olivoOscuro mb-0.5">
                   {a.label}
@@ -115,7 +110,6 @@ export default function PantallaAlergias() {
                 </p>
               </div>
 
-              {/* Checkbox */}
               <div 
                 className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 transition-all"
                 style={{
@@ -123,16 +117,13 @@ export default function PantallaAlergias() {
                   border: `2px solid ${activa ? '#E9967A' : '#c5c8bd'}`
                 }}
               >
-                {activa && (
-                  <span className="text-white text-xs font-bold">✓</span>
-                )}
+                {activa && <span className="text-white text-xs font-bold">✓</span>}
               </div>
             </button>
           )
         })}
       </div>
 
-      {/* Spacer */}
       <div className="flex-1" />
 
       {/* Botones */}
@@ -153,7 +144,7 @@ export default function PantallaAlergias() {
           onClick={handleSinAlergias}
           className="text-sm text-olivoOscuro opacity-60 underline py-2"
         >
-          No tengo alergias
+          No tengo alergias ni restricciones
         </button>
       </div>
 
