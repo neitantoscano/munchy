@@ -12,14 +12,25 @@ export default function PantallaOficio() {
       id: 'estudiante', 
       label: 'Estudiante', 
       sub: 'Comidas rápidas y económicas.',
+      tip: 'Para ti que vives entre clases y tareas.',
       color: '#eaf3de',
       borde: '#2e3a23',
       icono: '🎓'
     },
     { 
+      id: 'trabajo8h', 
+      label: 'Trabajo 8 horas', 
+      sub: 'Oficinista o turnos fijos.',
+      tip: 'Recetas para llevar al trabajo y batch cooking.',
+      color: '#f6ded1',
+      borde: '#a0522d',
+      icono: '🕐'
+    },
+    { 
       id: 'atleta', 
       label: 'Atleta', 
       sub: 'Alta proteína y rendimiento.',
+      tip: 'Si compites, entrenas duro o haces deporte intenso.',
       color: '#fff0e8',
       borde: '#8f4c35',
       icono: '🏋️'
@@ -28,17 +39,28 @@ export default function PantallaOficio() {
       id: 'profesional', 
       label: 'Profesional', 
       sub: 'Meal prep y cocina sofisticada.',
-      color: '#f6ded1',
-      borde: '#a0522d',
+      tip: 'Para ejecutivos, freelancers o emprendedores.',
+      color: '#ede0f7',
+      borde: '#5c3d6e',
       icono: '💼'
     },
     { 
       id: 'cocinero', 
       label: 'Cocinero en Casa', 
       sub: 'Cocina creativa y relajada.',
+      tip: 'Te gusta experimentar y tienes tiempo en la cocina.',
       color: '#d4edda',
       borde: '#3d7a3d',
       icono: '🍳'
+    },
+    { 
+      id: 'libre', 
+      label: 'Horario libre', 
+      sub: 'Sin rutina fija.',
+      tip: 'Trabajas desde casa, estudias o estás entre proyectos.',
+      color: '#fff3d6',
+      borde: '#c47c1a',
+      icono: '🌿'
     },
   ]
 
@@ -56,7 +78,7 @@ export default function PantallaOficio() {
   return (
     <main className="min-h-screen bg-crema flex flex-col px-5 py-6">
 
-      {/* Header con back */}
+      {/* Header */}
       <div className="flex items-center justify-between pb-4">
         <button 
           onClick={() => router.back()}
@@ -65,18 +87,18 @@ export default function PantallaOficio() {
           ←
         </button>
         <span className="font-serif text-lg text-olivo">Munchy</span>
-        <div className="w-10" /> {/* Spacer para centrar */}
+        <div className="w-10" />
       </div>
 
-      {/* Indicador de progreso */}
-      <div className="flex gap-1 mb-8">
+      {/* Progreso */}
+      <div className="flex gap-1 mb-6">
         <div className="flex-1 h-1 rounded-full bg-olivo"></div>
         <div className="flex-1 h-1 rounded-full bg-olivoClaro opacity-40"></div>
         <div className="flex-1 h-1 rounded-full bg-olivoClaro opacity-40"></div>
       </div>
 
-      {/* Saludo personalizado */}
-      <div className="mb-8">
+      {/* Saludo */}
+      <div className="mb-6">
         <p className="text-xs font-bold uppercase tracking-wider text-cafeTierra opacity-70 mb-2">
           Paso 1 de 3
         </p>
@@ -89,70 +111,72 @@ export default function PantallaOficio() {
       </div>
 
       {/* Lista de perfiles */}
-      <div className="flex flex-col gap-3 mb-8">
-        {perfiles.map(p => (
-          <button
-            key={p.id}
-            onClick={() => setSeleccionado(p.id)}
-            className="flex items-center gap-4 p-4 rounded-2xl text-left transition-all active:scale-98"
-            style={{
-              background: seleccionado === p.id ? p.color : '#ffffff',
-              border: `${seleccionado === p.id ? 2 : 1}px solid ${seleccionado === p.id ? p.borde : '#c5c8bd40'}`,
-              boxShadow: seleccionado === p.id 
-                ? `0 4px 16px ${p.borde}25` 
-                : '0 2px 12px rgba(0,0,0,0.04)'
-            }}
-          >
-            {/* Icono */}
-            <div 
-              className="w-14 h-14 rounded-full flex items-center justify-center text-2xl flex-shrink-0 transition-all"
+      <div className="flex flex-col gap-3 mb-6">
+        {perfiles.map(p => {
+          const activo = seleccionado === p.id
+          return (
+            <button
+              key={p.id}
+              onClick={() => setSeleccionado(p.id)}
+              className="flex items-start gap-4 p-4 rounded-2xl text-left transition-all active:scale-98"
               style={{
-                background: seleccionado === p.id ? '#ffffff' : p.color,
-                boxShadow: `0 2px 8px ${p.borde}30`
+                background: activo ? p.color : '#ffffff',
+                border: `${activo ? 2 : 1}px solid ${activo ? p.borde : '#c5c8bd40'}`,
+                boxShadow: activo 
+                  ? `0 4px 16px ${p.borde}25` 
+                  : '0 2px 12px rgba(0,0,0,0.04)'
               }}
             >
-              <img 
-                src={`/icons/icon-oficio-${p.id}.png`}
-                alt={p.label}
-                width={28}
-                height={28}
-                onError={(e) => { 
-                  e.currentTarget.style.display = 'none'
-                  e.currentTarget.parentElement.innerHTML = `<span style="font-size:28px">${p.icono}</span>`
+              {/* Icono */}
+              <div 
+                className="w-14 h-14 rounded-full flex items-center justify-center text-2xl flex-shrink-0 transition-all"
+                style={{
+                  background: activo ? '#ffffff' : p.color,
+                  boxShadow: `0 2px 8px ${p.borde}30`
                 }}
-              />
-            </div>
+              >
+                <img 
+                  src={`/icons/icon-oficio-${p.id}.png`}
+                  alt={p.label}
+                  width={28}
+                  height={28}
+                  onError={(e) => { 
+                    e.currentTarget.style.display = 'none'
+                    e.currentTarget.parentElement.innerHTML = `<span style="font-size:28px">${p.icono}</span>`
+                  }}
+                />
+              </div>
 
-            {/* Texto */}
-            <div className="flex-1">
-              <p className="font-semibold text-base text-olivoOscuro mb-0.5">
-                {p.label}
-              </p>
-              <p className="text-sm text-olivoOscuro opacity-60">
-                {p.sub}
-              </p>
-            </div>
+              {/* Texto + tip */}
+              <div className="flex-1 pt-0.5">
+                <p className="font-semibold text-base text-olivoOscuro mb-0.5">
+                  {p.label}
+                </p>
+                <p className="text-sm text-olivoOscuro opacity-70 mb-1.5">
+                  {p.sub}
+                </p>
+                <p className="text-xs italic" style={{ color: p.borde, opacity: 0.85 }}>
+                  💡 {p.tip}
+                </p>
+              </div>
 
-            {/* Checkmark */}
-            <div 
-              className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 transition-all"
-              style={{
-                background: seleccionado === p.id ? p.borde : '#e9e8e4'
-              }}
-            >
-              {seleccionado === p.id && (
-                <span className="text-white text-xs font-bold">✓</span>
-              )}
-            </div>
-          </button>
-        ))}
+              {/* Check */}
+              <div 
+                className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-1 transition-all"
+                style={{ background: activo ? p.borde : '#e9e8e4' }}
+              >
+                {activo && <span className="text-white text-xs font-bold">✓</span>}
+              </div>
+            </button>
+          )
+        })}
       </div>
 
-      {/* Botón continuar */}
+      {/* Botón */}
       <button
         onClick={handleContinuar}
         disabled={!seleccionado}
-        className="w-full h-14 bg-olivo text-white rounded-2xl font-semibold text-sm tracking-wide flex items-center justify-center gap-2 active:scale-95 transition-all"
+        className="w-full h-14 bg-olivo text-white rounded-2xl font-semibold text-sm tracking-wide flex items-center justify-center gap-2 active:scale-95 transition-all sticky bottom-4"
         style={{
           opacity: seleccionado ? 1 : 0.5,
           boxShadow: seleccionado ? '0 8px 24px rgba(46,58,35,0.25)' : 'none'
