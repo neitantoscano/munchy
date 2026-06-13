@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation'
 export default function PantallaEjercicio() {
   const router = useRouter()
   const [seleccionado, setSeleccionado] = useState(null)
+  const [cargando, setCargando] = useState(false)
+  const [error, setError] = useState('')
 
   const niveles = [
     { id: 'nada', label: 'Cero ejercicio', sub: 'Vida sedentaria, prefiero descansar.', color: '#f5f4f0', borde: '#75786f', icono: '🛋️', intensidad: 1 },
@@ -14,11 +16,30 @@ export default function PantallaEjercicio() {
     { id: 'gymrat', label: 'Gym Rat', sub: '5+ veces, vivo en el gym.', color: '#d4edda', borde: '#2e3a23', icono: '💪', intensidad: 4 },
   ]
 
-  const handleFinalizar = () => {
-    if (seleccionado) {
-      localStorage.setItem('munchy_ejercicio', seleccionado)
-      localStorage.setItem('munchy_onboarding_completo', 'true')
-      router.push('/casa')
+  const handleFinalizar = async () => {
+    if (!seleccionado) return
+    setCargando(true)
+    setError('')
+
+    try {
+      // 🔌 BACKEND: Guarda el nivel de ejercicio en Supabase
+      const res = await fetch('/api/usuario/perfil', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nivel_ejercicio: seleccionado }),
+      })
+
+      const data = await res.json()
+
+      if (data.ok) {
+        router.push('/casa')
+      } else {
+        setError('Algo salió mal. Intenta de nuevo.')
+        setCargando(false)
+      }
+    } catch (e) {
+      setError('Sin conexión. Revisa tu internet.')
+      setCargando(false)
     }
   }
 
@@ -57,12 +78,12 @@ export default function PantallaEjercicio() {
               }}
             >
               <div className="w-14 h-14 rounded-full flex items-center justify-center text-2xl flex-shrink-0 transition-all" style={{ background: activo ? '#ffffff' : n.color, boxShadow: `0 2px 8px ${n.borde}30` }}>
-                <img 
+                <img
                   src={`/icons/icon-ejercicio-${n.id}.png`}
                   alt={n.label}
                   width={28}
                   height={28}
-                  onError={(e) => { 
+                  onError={(e) => {
                     e.currentTarget.style.display = 'none'
                     e.currentTarget.parentElement.innerHTML = `<span style="font-size:28px">${n.icono}</span>`
                   }}
@@ -89,17 +110,21 @@ export default function PantallaEjercicio() {
 
       <div className="flex-1" />
 
+      {error && (
+        <p className="text-xs text-salmon font-medium text-center mb-2">{error}</p>
+      )}
+
       <button
         onClick={handleFinalizar}
-        disabled={!seleccionado}
+        disabled={!seleccionado || cargando}
         className="w-full h-14 bg-olivo text-white rounded-2xl font-semibold text-sm tracking-wide flex items-center justify-center gap-2 active:scale-95 transition-all"
         style={{
-          opacity: seleccionado ? 1 : 0.5,
+          opacity: (seleccionado && !cargando) ? 1 : 0.5,
           boxShadow: seleccionado ? '0 8px 24px rgba(46,58,35,0.25)' : 'none'
         }}
       >
-        {seleccionado ? '✨ Entrar a Munchy' : 'Selecciona tu nivel'}
-        <span>→</span>
+        {cargando ? 'Guardando...' : (seleccionado ? '✨ Entrar a Munchy' : 'Selecciona tu nivel')}
+        {!cargando && <span>→</span>}
       </button>
     </main>
   )
