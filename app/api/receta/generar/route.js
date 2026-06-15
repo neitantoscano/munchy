@@ -234,7 +234,7 @@ export async function POST(request) {
     // 9. Calcular recetas restantes para hoy
     let recetasRestantes
     if (usuario.es_premium) {
-      recetasRestantes = null // ilimitado
+      recetasRestantes = 999 // ilimitado
     } else {
       const usadasFinal = vinoDeCache ? usadasHoy : usadasHoy + 1
       recetasRestantes = Math.max(0, LIMITE_FREE - usadasFinal)
