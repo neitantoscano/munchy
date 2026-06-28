@@ -164,7 +164,7 @@ export default function PantallaDespensa() {
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm text-olivoOscuro truncate">{ing.nombre}</p>
+                  <p className="font-semibold text-sm text-olivoOscuro truncate">{ing.nombre_ingrediente}</p>
                   <p className="text-xs text-olivoOscuro opacity-60">{ing.cantidad} {ing.unidad}</p>
                 </div>
 
