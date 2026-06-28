@@ -14,18 +14,24 @@ export default function PantallaPremium() {
     { icono: '🚫', titulo: 'Sin anuncios', sub: 'Experiencia limpia, enfocada en cocinar' },
   ]
 
-  const pagar = () => {
+  const pagar = async () => {
     setCargando(true)
 
-    // 🔌 BACKEND: Reemplazar por:
-    // fetch('/api/pagos/crear-preferencia', { method: 'POST' })
-    //   .then(r => r.json())
-    //   .then(d => { window.location.href = d.url_pago })
+    try {
+      // 🔌 BACKEND: genera el link de pago de Mercado Pago
+      const res = await fetch('/api/pagos/crear-preferencia', { method: 'POST' })
+      const data = await res.json()
 
-    setTimeout(() => {
-      alert('Aquí redirigirá a Mercado Pago cuando el backend esté conectado.')
+      if (data.ok && data.url_pago) {
+        window.location.href = data.url_pago
+      } else {
+        alert('No se pudo generar el pago. Intenta de nuevo.')
+        setCargando(false)
+      }
+    } catch (e) {
+      alert('Sin conexión. Revisa tu internet.')
       setCargando(false)
-    }, 1000)
+    }
   }
 
   return (
@@ -78,8 +84,8 @@ export default function PantallaPremium() {
             Plan mensual
           </p>
           <div className="flex items-baseline gap-1 mb-1">
-            <span className="font-serif text-4xl text-olivoOscuro">$3</span>
-            <span className="text-sm text-olivoOscuro opacity-60">USD / mes</span>
+            <span className="font-serif text-4xl text-olivoOscuro">$80</span>
+            <span className="text-sm text-olivoOscuro opacity-60">MXN / mes</span>
           </div>
           <p className="text-xs text-olivoOscuro opacity-60">
             Cancela cuando quieras. Sin compromisos.
