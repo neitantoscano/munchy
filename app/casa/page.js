@@ -137,3 +137,69 @@ export default function PantallaCasa() {
                   ? `Te tengo una sorpresa, ${datos.apodo}. Tu primera receta es de regalo 🎁`
                   : `${datos.apodo}, hoy tengo ideas perfectas para ti.`}
               </p>
+            </div>
+          </div>
+        </div>
+
+        <button onClick={irAGenerar} className="w-full bg-olivo text-white rounded-2xl py-5 mb-6 active:scale-98 transition-transform" style={{ boxShadow: '0 8px 24px rgba(46,58,35,0.3)' }}>
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <span className="text-xl">⚡</span>
+            <span className="font-bold text-base tracking-wide">
+              {datos.primera_vez ? 'GENERAR MI PRIMERA RECETA 🎁' : 'GENERAR ANTOJO FIT'}
+            </span>
+          </div>
+          <p className="text-xs text-olivoClaro/70 font-medium">{recetasTexto}</p>
+        </button>
+
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-serif text-xl text-olivoOscuro">Mi Despensa</h2>
+            <button onClick={() => router.push('/despensa')} className="text-xs font-semibold text-cafeTierra bg-salmon/10 rounded-full px-3 py-1.5">Ver todo →</button>
+          </div>
+
+          {datos.ingredientes_en_despensa === 0 ? (
+            <div className="bg-white rounded-2xl p-5 text-center border-2 border-dashed border-olivoClaro">
+              <p className="text-3xl mb-2">📦</p>
+              <p className="text-sm text-olivoOscuro opacity-70 mb-3">Tu despensa está vacía</p>
+              <button onClick={() => router.push('/despensa')} className="text-sm font-semibold text-olivo underline">Agregar ingredientes</button>
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl p-5 text-center border border-olivoClaro/30" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
+              <p className="font-serif text-3xl text-olivoOscuro mb-1">{datos.ingredientes_en_despensa}</p>
+              <p className="text-xs text-olivoOscuro opacity-60 uppercase tracking-wide">
+                {datos.ingredientes_en_despensa === 1 ? 'ingrediente guardado' : 'ingredientes guardados'}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md px-5 pb-4 z-50">
+        <div className="bg-white/95 backdrop-blur-md rounded-3xl px-2 py-2 flex justify-around items-center border border-olivoClaro/30" style={{ boxShadow: '0 -2px 20px rgba(0,0,0,0.08)' }}>
+          {[
+            { id: 'casa', label: 'Casa', icono: '🏠', activo: true },
+            { id: 'despensa', label: 'Despensa', icono: '📦' },
+            { id: 'guardados', label: 'Guardados', icono: '🔖' },
+            { id: 'perfil', label: 'Perfil', icono: '👤' },
+          ].map(item => (
+            <button key={item.id} onClick={() => router.push(`/${item.id}`)} className="flex flex-col items-center gap-1 py-2 px-3 rounded-2xl transition-all" style={{ background: item.activo ? '#2e3a23' : 'transparent' }}>
+              <span className="text-base" style={{ filter: item.activo ? 'brightness(10)' : 'none' }}>{item.icono}</span>
+              <span className={`text-[10px] font-semibold ${item.activo ? 'text-white' : 'text-olivoOscuro opacity-60'}`}>{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </nav>
+
+      <style jsx>{`
+        @keyframes flotar {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-4px); }
+        }
+        @keyframes pulso {
+          0%, 100% { opacity: 0.3; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.3); }
+        }
+      `}</style>
+    </main>
+  )
+}
