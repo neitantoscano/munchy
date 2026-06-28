@@ -84,9 +84,8 @@ export default function PantallaDespensa() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          nombre: nuevoNombre.trim(),
+          nombre_ingrediente: nuevoNombre.trim(),
           cantidad: nuevaCantidad,
-          unidad: 'unidades',
           categoria: nuevaCategoria,
         }),
       })
