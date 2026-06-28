@@ -6,8 +6,10 @@ import { useRouter } from 'next/navigation'
 export default function PantallaPerfil() {
   const router = useRouter()
   const [datos, setDatos] = useState(null)
+  const [error, setError] = useState('')
   const [editando, setEditando] = useState(false)
   const [nuevoApodo, setNuevoApodo] = useState('')
+  const [guardando, setGuardando] = useState(false)
 
   const oficios = {
     estudiante: '🎓 Estudiante',
@@ -33,58 +35,91 @@ export default function PantallaPerfil() {
     otro: '➕ Otro',
   }
 
-  useEffect(() => {
-    // 🔌 BACKEND: Reemplazar por:
-    // fetch('/api/usuario/perfil').then(r => r.json()).then(setDatos)
-
-    const apodo = (typeof window !== 'undefined' && localStorage.getItem('munchy_apodo')) || 'Munchie Fan'
-    const oficio = (typeof window !== 'undefined' && localStorage.getItem('munchy_oficio')) || 'estudiante'
-    const ejercicio = (typeof window !== 'undefined' && localStorage.getItem('munchy_ejercicio')) || 'ocasional'
-    let alergias = []
+  const cargarPerfil = async () => {
     try {
-      alergias = JSON.parse(localStorage.getItem('munchy_alergias') || '[]')
+      // 🔌 BACKEND: lee el perfil real del usuario
+      const res = await fetch('/api/usuario/perfil', { cache: 'no-store' })
+      const data = await res.json()
+
+      if (data.ok) {
+        const p = data.perfil || data
+        setDatos({
+          apodo: p.apodo || 'Sin nombre',
+          oficio: p.oficio || null,
+          nivel_ejercicio: p.nivel_ejercicio || null,
+          alergias: p.alergias || [],
+          es_premium: !!p.es_premium,
+          racha_dias: p.racha_dias ?? 0,
+          racha_record: p.racha_record ?? 0,
+          recetas_generadas_total: p.recetas_generadas_total ?? 0,
+          miembro_desde: p.miembro_desde || null,
+        })
+      } else {
+        setError('No pudimos cargar tu perfil.')
+      }
     } catch (e) {
-      alergias = []
+      setError('Sin conexión. Revisa tu internet.')
     }
-
-    setDatos({
-      apodo,
-      oficio,
-      nivel_ejercicio: ejercicio,
-      alergias,
-      es_premium: false,
-      racha_dias: 5,
-      racha_record: 12,
-      recetas_generadas_total: 47,
-      miembro_desde: '2024-01-15',
-    })
-  }, [])
-
-  const guardarApodo = () => {
-    if (!nuevoApodo.trim()) return
-
-    // 🔌 BACKEND: Reemplazar por:
-    // fetch('/api/usuario/perfil', { method: 'PATCH', body: JSON.stringify({ apodo: nuevoApodo.trim() }) })
-
-    localStorage.setItem('munchy_apodo', nuevoApodo.trim())
-    setDatos(prev => ({ ...prev, apodo: nuevoApodo.trim() }))
-    setEditando(false)
-    setNuevoApodo('')
   }
 
-  const cerrarSesion = () => {
-    // 🔌 BACKEND: Reemplazar por:
-    // fetch('/api/auth/salir', { method: 'POST' }).then(() => router.push('/bienvenida'))
+  useEffect(() => {
+    cargarPerfil()
+  }, [])
+
+  const guardarApodo = async () => {
+    if (!nuevoApodo.trim()) return
+    setGuardando(true)
+
+    try {
+      // 🔌 BACKEND: actualiza el apodo
+      const res = await fetch('/api/usuario/perfil', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apodo: nuevoApodo.trim() }),
+      })
+
+      const data = await res.json()
+
+      if (data.ok) {
+        setDatos(prev => ({ ...prev, apodo: nuevoApodo.trim() }))
+        setEditando(false)
+        setNuevoApodo('')
+      }
+    } catch (e) {
+      // silencioso
+    }
+    setGuardando(false)
+  }
+
+  const cerrarSesion = async () => {
+    try {
+      // 🔌 BACKEND: cierra sesión
+      await fetch('/api/auth/salir', { method: 'POST' })
+    } catch (e) {
+      // continúa aunque falle
+    }
     router.push('/bienvenida')
   }
 
   const formatearFecha = (iso) => {
+    if (!iso) return '—'
     try {
       const d = new Date(iso)
       return d.toLocaleDateString('es-MX', { month: 'long', year: 'numeric' })
     } catch (e) {
-      return iso
+      return '—'
     }
+  }
+
+  if (error) {
+    return (
+      <main className="min-h-screen bg-crema flex flex-col items-center justify-center px-5">
+        <p className="text-sm text-salmon font-medium text-center mb-4">{error}</p>
+        <button onClick={cargarPerfil} className="h-11 px-6 bg-olivo text-white rounded-xl text-sm font-semibold">
+          Reintentar
+        </button>
+      </main>
+    )
   }
 
   if (!datos) {
@@ -117,7 +152,7 @@ export default function PantallaPerfil() {
         <div className="flex flex-col items-center pt-4 pb-6">
           <div className="w-24 h-24 rounded-full bg-olivo flex items-center justify-center text-white font-serif text-4xl mb-3 relative"
                style={{ boxShadow: '0 8px 24px rgba(46,58,35,0.25)' }}>
-            {datos.apodo[0].toUpperCase()}
+            {datos.apodo[0]?.toUpperCase() || '?'}
             {datos.es_premium && (
               <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-ambar flex items-center justify-center text-base border-2 border-crema">
                 👑
@@ -142,8 +177,10 @@ export default function PantallaPerfil() {
                 >Cancelar</button>
                 <button
                   onClick={guardarApodo}
+                  disabled={guardando}
                   className="flex-1 h-10 rounded-xl bg-olivo text-white text-sm font-semibold active:scale-95"
-                >Guardar</button>
+                  style={{ opacity: guardando ? 0.7 : 1 }}
+                >{guardando ? 'Guardando...' : 'Guardar'}</button>
               </div>
             </div>
           ) : (
@@ -184,7 +221,7 @@ export default function PantallaPerfil() {
             <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center text-2xl flex-shrink-0">👑</div>
             <div className="flex-1 text-left">
               <p className="font-semibold text-base text-white">Hazte Premium</p>
-              <p className="text-xs text-white/80">Recetas ilimitadas por $3 USD/mes</p>
+              <p className="text-xs text-white/80">Recetas ilimitadas por $80 MXN/mes</p>
             </div>
             <span className="text-white text-xl">→</span>
           </button>
@@ -194,11 +231,15 @@ export default function PantallaPerfil() {
              style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
           <div className="flex items-center justify-between p-4 border-b border-olivoClaro/20">
             <span className="text-sm text-olivoOscuro opacity-70">Oficio</span>
-            <span className="text-sm font-semibold text-olivoOscuro">{oficios[datos.oficio] || datos.oficio}</span>
+            <span className="text-sm font-semibold text-olivoOscuro">
+              {datos.oficio ? (oficios[datos.oficio] || datos.oficio) : '—'}
+            </span>
           </div>
           <div className="flex items-center justify-between p-4 border-b border-olivoClaro/20">
             <span className="text-sm text-olivoOscuro opacity-70">Actividad física</span>
-            <span className="text-sm font-semibold text-olivoOscuro">{ejercicios[datos.nivel_ejercicio] || datos.nivel_ejercicio}</span>
+            <span className="text-sm font-semibold text-olivoOscuro">
+              {datos.nivel_ejercicio ? (ejercicios[datos.nivel_ejercicio] || datos.nivel_ejercicio) : '—'}
+            </span>
           </div>
           <div className="flex items-start justify-between p-4">
             <span className="text-sm text-olivoOscuro opacity-70">Alergias</span>
