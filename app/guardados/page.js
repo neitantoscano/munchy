@@ -7,20 +7,31 @@ export default function PantallaGuardados() {
   const router = useRouter()
   const [recetas, setRecetas] = useState([])
   const [cargando, setCargando] = useState(true)
+  const [error, setError] = useState('')
+
+  const cargarGuardados = async () => {
+    try {
+      // 🔌 BACKEND: lee la lista real de recetas guardadas
+      const res = await fetch('/api/recetas/guardadas', { cache: 'no-store' })
+      const data = await res.json()
+
+      if (data.ok) {
+        setRecetas(data.recetas || [])
+      } else {
+        if (data.error === 'sin_sesion' || data.error === 'sesion_no_encontrada') {
+          router.push('/bienvenida')
+          return
+        }
+        setError('No pudimos cargar tus guardados.')
+      }
+    } catch (e) {
+      setError('Sin conexión. Revisa tu internet.')
+    }
+    setCargando(false)
+  }
 
   useEffect(() => {
-    // 🔌 BACKEND: Reemplazar por:
-    // fetch('/api/recetas/guardadas').then(r => r.json()).then(d => { setRecetas(d.recetas); setCargando(false) })
-
-    setTimeout(() => {
-      setRecetas([
-        { id: 'mock-001', titulo: 'Chilaquiles Verdes con Crunch de Pepita', emoji: '🌶️', estilo: 'moderna', tiempo_minutos: 15, proteina_g: 28 },
-        { id: 'mock-002', titulo: 'Helado de Proteína de Mango', emoji: '🥭', estilo: 'moderna', tiempo_minutos: 10, proteina_g: 32 },
-        { id: 'mock-003', titulo: 'Avena Clásica con Plátano', emoji: '🍌', estilo: 'clasica', tiempo_minutos: 8, proteina_g: 14 },
-        { id: 'mock-004', titulo: 'Bowl de Pollo y Quinoa', emoji: '🥗', estilo: 'moderna', tiempo_minutos: 20, proteina_g: 38 },
-      ])
-      setCargando(false)
-    }, 500)
+    cargarGuardados()
   }, [])
 
   return (
@@ -40,10 +51,19 @@ export default function PantallaGuardados() {
           <h1 className="font-serif text-3xl text-olivoOscuro leading-tight mb-2">Tus Favoritos 🔖</h1>
           <p className="text-sm text-olivoOscuro opacity-70 leading-relaxed">
             {recetas.length > 0
-              ? `${recetas.length} recetas guardadas, listas para repetir.`
+              ? `${recetas.length} ${recetas.length === 1 ? 'receta guardada' : 'recetas guardadas'}, listas para repetir.`
               : 'Aquí guardas las recetas que más te gusten.'}
           </p>
         </div>
+
+        {error && (
+          <div className="bg-white rounded-2xl p-4 mb-4 border border-salmon/50 text-center">
+            <p className="text-sm text-salmon font-medium mb-3">{error}</p>
+            <button onClick={() => { setError(''); setCargando(true); cargarGuardados() }} className="h-10 px-5 bg-olivo text-white rounded-xl text-sm font-semibold">
+              Reintentar
+            </button>
+          </div>
+        )}
 
         {cargando ? (
           <div className="flex justify-center py-12">
@@ -54,7 +74,7 @@ export default function PantallaGuardados() {
               ))}
             </div>
           </div>
-        ) : recetas.length === 0 ? (
+        ) : recetas.length === 0 && !error ? (
           <div className="bg-white rounded-2xl p-8 text-center border-2 border-dashed border-olivoClaro">
             <div className="w-16 h-16 rounded-2xl bg-olivoClaro/40 flex items-center justify-center text-4xl mx-auto mb-3">
               🔖
@@ -81,11 +101,13 @@ export default function PantallaGuardados() {
                      style={{ background: r.estilo === 'moderna'
                        ? 'linear-gradient(135deg, #fdeee8, #ffe0d0)'
                        : 'linear-gradient(135deg, #eaf3de, #d9e8c6)' }}>
-                  {r.emoji}
-                  <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-white/90 backdrop-blur-sm"
-                        style={{ color: r.estilo === 'moderna' ? '#E9967A' : '#3d7a3d' }}>
-                    {r.estilo === 'moderna' ? '✨ Moderna' : '🌿 Clásica'}
-                  </span>
+                  {r.emoji || '🍽️'}
+                  {r.estilo && (
+                    <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-white/90 backdrop-blur-sm"
+                          style={{ color: r.estilo === 'moderna' ? '#E9967A' : '#3d7a3d' }}>
+                      {r.estilo === 'moderna' ? '✨ Moderna' : '🌿 Clásica'}
+                    </span>
+                  )}
                 </div>
 
                 <div className="p-3">
@@ -94,9 +116,9 @@ export default function PantallaGuardados() {
                     {r.titulo}
                   </p>
                   <div className="flex items-center gap-2 text-xs text-olivoOscuro opacity-60">
-                    <span>⏱️ {r.tiempo_minutos}m</span>
-                    <span>·</span>
-                    <span>💪 {r.proteina_g}g</span>
+                    {r.tiempo_minutos && <span>⏱️ {r.tiempo_minutos}m</span>}
+                    {r.tiempo_minutos && r.proteina_g && <span>·</span>}
+                    {r.proteina_g && <span>💪 {r.proteina_g}g</span>}
                   </div>
                 </div>
               </button>
