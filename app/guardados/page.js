@@ -12,7 +12,7 @@ export default function PantallaGuardados() {
   const cargarGuardados = async () => {
     try {
       // 🔌 BACKEND: lee la lista real de recetas guardadas
-      const res = await fetch('/api/recetas/guardadas', { cache: 'no-store' })
+      const res = await fetch('/api/receta/guardar', { cache: 'no-store' })
       const data = await res.json()
 
       if (data.ok) {
