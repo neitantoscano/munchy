@@ -292,6 +292,8 @@ Sugiere 1 o 2 ingredientes "Nivel Pro" que suban la receta de nivel.
 REGLAS ESTRICTAS:
 - NUNCA uses estos ingredientes (alergias del usuario): ${listaAlergias}.
 - Usa principalmente los ingredientes disponibles. Puedes asumir 1-2 básicos comunes (sal, aceite, especias).
+- Las instrucciones deben tener entre 4 y 6 pasos.
+- CADA paso debe tener aproximadamente 33 palabras (dos oraciones): la primera dice qué hacer, la segunda da un detalle útil, tip o punto a cuidar. Ni muy corto ni un párrafo largo.
 - Responde SOLO con un objeto JSON válido. Sin texto antes ni después. Sin backticks. Sin markdown.
 
 FORMATO EXACTO del JSON:
@@ -304,7 +306,7 @@ FORMATO EXACTO del JSON:
   "descripcion": "string de 1 linea",
   "ingredientes": [{ "nombre": "string", "cantidad": "string con unidad, ej: 2 tazas" }],
   "ingredientes_pro": [{ "nombre": "string", "cantidad": "string", "razon": "por que sube nivel" }],
-  "instrucciones": ["paso 1", "paso 2"],
+  "instrucciones": ["paso de ~33 palabras", "paso de ~33 palabras"],
   "macros": { "proteina_g": numero, "carbos_g": numero, "grasas_g": numero, "calorias": numero, "azucar_g": numero, "fibra_g": numero, "sodio_mg": numero }
 }`
 
