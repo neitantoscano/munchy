@@ -13,7 +13,7 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from('despensa')
-      .select('id, nombre_ingrediente, cantidad, unidad, categoria')
+      .select('id, ingrediente')
       .eq('usuario_id', user.id)
       .order('created_at', { ascending: true })
 
