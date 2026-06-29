@@ -9,22 +9,10 @@ export default function PantallaDespensa() {
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
   const [mostrarAgregar, setMostrarAgregar] = useState(false)
-  const [nuevoNombre, setNuevoNombre] = useState('')
-  const [nuevaCantidad, setNuevaCantidad] = useState(1)
-  const [nuevaCategoria, setNuevaCategoria] = useState('frutas')
+  const [nuevoTexto, setNuevoTexto] = useState('')
   const [guardando, setGuardando] = useState(false)
-
-  const categorias = [
-    { id: 'frutas',      label: 'Frutas',      icono: '🍎' },
-    { id: 'verduras',    label: 'Verduras',    icono: '🥦' },
-    { id: 'proteinas',   label: 'Proteínas',   icono: '🍗' },
-    { id: 'lacteos',     label: 'Lácteos',     icono: '🥛' },
-    { id: 'granos',      label: 'Granos',      icono: '🌾' },
-    { id: 'suplementos', label: 'Suplementos', icono: '💊' },
-    { id: 'otro',        label: 'Otro',        icono: '📦' },
-  ]
-
-  const iconoCategoria = (cat) => categorias.find(c => c.id === cat)?.icono || '📦'
+  const [editandoId, setEditandoId] = useState(null)
+  const [textoEdit, setTextoEdit] = useState('')
 
   const cargarDespensa = async () => {
     try {
@@ -51,51 +39,22 @@ export default function PantallaDespensa() {
     cargarDespensa()
   }, [])
 
-  const actualizar = async (id, accion) => {
-    setIngredientes(prev =>
-      prev
-        .map(ing => {
-          if (ing.id !== id) return ing
-          const nueva = accion === 'sumar' ? ing.cantidad + 1 : ing.cantidad - 1
-          return { ...ing, cantidad: nueva }
-        })
-        .filter(ing => ing.cantidad > 0)
-    )
-
-    try {
-      // 🔌 BACKEND: actualiza la cantidad en Supabase
-      await fetch('/api/despensa/actualizar', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ingrediente_id: id, accion }),
-      })
-    } catch (e) {
-      cargarDespensa()
-    }
-  }
-
   const agregar = async () => {
-    if (!nuevoNombre.trim()) return
+    if (!nuevoTexto.trim()) return
     setGuardando(true)
 
     try {
-      // 🔌 BACKEND: agrega nuevo ingrediente
+      // 🔌 BACKEND: agrega ingrediente como texto libre
       const res = await fetch('/api/despensa/agregar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nombre_ingrediente: nuevoNombre.trim(),
-          cantidad: nuevaCantidad,
-          categoria: nuevaCategoria,
-        }),
+        body: JSON.stringify({ ingrediente: nuevoTexto.trim() }),
       })
 
       const data = await res.json()
 
       if (data.ok) {
-        setNuevoNombre('')
-        setNuevaCantidad(1)
-        setNuevaCategoria('frutas')
+        setNuevoTexto('')
         setMostrarAgregar(false)
         cargarDespensa()
       }
@@ -103,6 +62,45 @@ export default function PantallaDespensa() {
       // silencioso
     }
     setGuardando(false)
+  }
+
+  const guardarEdicion = async (id) => {
+    if (!textoEdit.trim()) return
+
+    try {
+      // 🔌 BACKEND: edita el texto del ingrediente
+      const res = await fetch('/api/despensa/actualizar', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, ingrediente: textoEdit.trim() }),
+      })
+
+      const data = await res.json()
+
+      if (data.ok) {
+        setEditandoId(null)
+        setTextoEdit('')
+        cargarDespensa()
+      }
+    } catch (e) {
+      // silencioso
+    }
+  }
+
+  const borrar = async (id) => {
+    // Optimista: lo quito de pantalla
+    setIngredientes(prev => prev.filter(ing => ing.id !== id))
+
+    try {
+      // 🔌 BACKEND: borra el ingrediente
+      await fetch('/api/despensa/eliminar', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      })
+    } catch (e) {
+      cargarDespensa()
+    }
   }
 
   return (
@@ -157,28 +155,46 @@ export default function PantallaDespensa() {
           <div className="flex flex-col gap-2 mb-5">
             {ingredientes.map(ing => (
               <div key={ing.id}
-                   className="flex items-center gap-3 bg-white rounded-2xl p-3 border border-olivoClaro/30"
+                   className="bg-white rounded-2xl p-3 border border-olivoClaro/30"
                    style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-                <div className="w-11 h-11 rounded-xl bg-cremaSuave flex items-center justify-center text-xl flex-shrink-0">
-                  {iconoCategoria(ing.categoria)}
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm text-olivoOscuro truncate">{ing.nombre_ingrediente}</p>
-                  <p className="text-xs text-olivoOscuro opacity-60">{ing.cantidad} {ing.unidad}</p>
-                </div>
-
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <button
-                    onClick={() => actualizar(ing.id, 'restar')}
-                    className="w-8 h-8 rounded-full bg-cremaSuave border border-olivoClaro/40 flex items-center justify-center text-olivo text-lg font-bold active:scale-90 transition-transform"
-                  >−</button>
-                  <span className="w-6 text-center font-semibold text-sm text-olivoOscuro">{ing.cantidad}</span>
-                  <button
-                    onClick={() => actualizar(ing.id, 'sumar')}
-                    className="w-8 h-8 rounded-full bg-olivo flex items-center justify-center text-white text-lg font-bold active:scale-90 transition-transform"
-                  >+</button>
-                </div>
+                {editandoId === ing.id ? (
+                  <div>
+                    <input
+                      type="text"
+                      value={textoEdit}
+                      onChange={(e) => setTextoEdit(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-olivo bg-cremaSuave text-olivoOscuro text-sm mb-2 focus:outline-none"
+                      autoFocus
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => { setEditandoId(null); setTextoEdit('') }}
+                        className="flex-1 h-9 rounded-lg border border-olivoClaro text-olivoOscuro text-xs font-medium active:scale-95"
+                      >Cancelar</button>
+                      <button
+                        onClick={() => guardarEdicion(ing.id)}
+                        className="flex-1 h-9 rounded-lg bg-olivo text-white text-xs font-semibold active:scale-95"
+                      >Guardar</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-cremaSuave flex items-center justify-center text-lg flex-shrink-0">
+                      🥗
+                    </div>
+                    <p className="flex-1 min-w-0 text-sm text-olivoOscuro break-words">{ing.ingrediente}</p>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <button
+                        onClick={() => { setEditandoId(ing.id); setTextoEdit(ing.ingrediente) }}
+                        className="w-9 h-9 rounded-full bg-cremaSuave flex items-center justify-center text-sm active:scale-90 transition-transform"
+                      >✏️</button>
+                      <button
+                        onClick={() => borrar(ing.id)}
+                        className="w-9 h-9 rounded-full bg-salmonLight flex items-center justify-center text-sm active:scale-90 transition-transform"
+                      >🗑️</button>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -193,53 +209,32 @@ export default function PantallaDespensa() {
 
             <input
               type="text"
-              value={nuevoNombre}
-              onChange={(e) => setNuevoNombre(e.target.value)}
-              placeholder="Ej: Aguacate"
-              className="w-full px-4 py-3 rounded-xl border border-olivoClaro/50 bg-cremaSuave text-olivoOscuro text-sm mb-3 focus:outline-none focus:border-olivo transition-colors"
+              value={nuevoTexto}
+              onChange={(e) => setNuevoTexto(e.target.value)}
+              placeholder="Ej: 600 ml de miel"
+              className="w-full px-4 py-3 rounded-xl border border-olivoClaro/50 bg-cremaSuave text-olivoOscuro text-sm mb-2 focus:outline-none focus:border-olivo transition-colors"
+              autoFocus
             />
 
-            <div className="flex items-center gap-3 mb-3">
-              <span className="text-xs text-olivoOscuro opacity-70">Cantidad:</span>
-              <button
-                onClick={() => setNuevaCantidad(Math.max(1, nuevaCantidad - 1))}
-                className="w-8 h-8 rounded-full bg-cremaSuave border border-olivoClaro/40 flex items-center justify-center text-olivo font-bold active:scale-90"
-              >−</button>
-              <span className="w-6 text-center font-semibold text-sm">{nuevaCantidad}</span>
-              <button
-                onClick={() => setNuevaCantidad(nuevaCantidad + 1)}
-                className="w-8 h-8 rounded-full bg-olivo flex items-center justify-center text-white font-bold active:scale-90"
-              >+</button>
-            </div>
-
-            <div className="flex flex-wrap gap-2 mb-4">
-              {categorias.map(c => (
-                <button
-                  key={c.id}
-                  onClick={() => setNuevaCategoria(c.id)}
-                  className="px-3 py-1.5 rounded-full text-xs font-medium transition-all"
-                  style={{
-                    background: nuevaCategoria === c.id ? '#2e3a23' : '#f5f4f0',
-                    color: nuevaCategoria === c.id ? '#ffffff' : '#19240f',
-                  }}
-                >
-                  {c.icono} {c.label}
-                </button>
-              ))}
-            </div>
+            <p className="text-xs text-olivoOscuro opacity-60 leading-relaxed mb-1">
+              🎤 Escribe o dicta con el micrófono de tu teclado.
+            </p>
+            <p className="text-xs text-olivoOscuro opacity-60 leading-relaxed mb-4">
+              Agrega un solo ingrediente a la vez, con su cantidad exacta.
+            </p>
 
             <div className="flex gap-2">
               <button
-                onClick={() => setMostrarAgregar(false)}
+                onClick={() => { setMostrarAgregar(false); setNuevoTexto('') }}
                 className="flex-1 h-11 rounded-xl border border-olivoClaro text-olivoOscuro text-sm font-medium active:scale-95 transition-transform"
               >
                 Cancelar
               </button>
               <button
                 onClick={agregar}
-                disabled={!nuevoNombre.trim() || guardando}
+                disabled={!nuevoTexto.trim() || guardando}
                 className="flex-1 h-11 rounded-xl bg-olivo text-white text-sm font-semibold active:scale-95 transition-transform"
-                style={{ opacity: nuevoNombre.trim() && !guardando ? 1 : 0.5 }}
+                style={{ opacity: nuevoTexto.trim() && !guardando ? 1 : 0.5 }}
               >
                 {guardando ? 'Guardando...' : 'Agregar'}
               </button>
