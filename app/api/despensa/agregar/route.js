@@ -1,7 +1,7 @@
 import { createServerSupabase } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 
-// ─── POST: agregar un ingrediente a la despensa ───
+// ─── POST: agregar un ingrediente (texto libre) a la despensa ───
 export async function POST(request) {
   try {
     const supabase = await createServerSupabase()
@@ -12,28 +12,20 @@ export async function POST(request) {
     }
 
     const body = await request.json()
-    const nombre = body?.nombre_ingrediente
+    const ingrediente = body?.ingrediente
 
-    // El nombre es obligatorio
-    if (!nombre || nombre.trim() === '') {
-      return NextResponse.json({ ok: false, error: 'falta_nombre' }, { status: 400 })
+    // El texto del ingrediente es obligatorio
+    if (!ingrediente || ingrediente.trim() === '') {
+      return NextResponse.json({ ok: false, error: 'falta_ingrediente' }, { status: 400 })
     }
-
-    // Cantidad, unidad y categoría son opcionales (usamos defaults si no vienen)
-    const cantidad = body?.cantidad ?? 1
-    const unidad = body?.unidad?.trim() || 'unidades'
-    const categoria = body?.categoria?.trim() || 'otro'
 
     const { data, error } = await supabase
       .from('despensa')
       .insert({
         usuario_id: user.id,
-        nombre_ingrediente: nombre.trim(),
-        cantidad: cantidad,
-        unidad: unidad,
-        categoria: categoria
+        ingrediente: ingrediente.trim()
       })
-      .select('id, nombre_ingrediente, cantidad, unidad, categoria')
+      .select('id, ingrediente')
       .single()
 
     if (error) {
