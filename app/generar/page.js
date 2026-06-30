@@ -9,6 +9,7 @@ export default function PantallaGenerar() {
   const [textoLibre, setTextoLibre] = useState('')
   const [cargando, setCargando] = useState(false)
   const [mensajeIdx, setMensajeIdx] = useState(0)
+  const [error, setError] = useState('')
 
   const tipos = [
     { id: 'desayuno',  label: 'Desayuno',  sub: 'Arranca con energía',  icono: '🍳', color: '#fff3d6', borde: '#c47c1a' },
@@ -40,21 +41,56 @@ export default function PantallaGenerar() {
     seleccionado &&
     (seleccionado !== 'otro' || textoLibre.trim().length > 0)
 
-  const handleGenerar = () => {
+  const handleGenerar = async () => {
     if (!puedeGenerar) return
     setCargando(true)
+    setError('')
 
-    // MOCK: simula llamada al backend (real en semana 4 → /api/receta/generar)
-    setTimeout(() => {
-      localStorage.setItem('munchy_ultimo_tipo', seleccionado)
-      if (seleccionado === 'otro') {
-        localStorage.setItem('munchy_ultimo_texto', textoLibre.trim())
+    const body = { tipo_comida: seleccionado }
+    if (seleccionado === 'otro') {
+      body.texto_libre = textoLibre.trim()
+    }
+
+    try {
+      // 🔌 BACKEND: genera la receta real con IA
+      const res = await fetch('/api/receta/generar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+
+      const data = await res.json()
+
+      if (data.ok && data.receta) {
+        router.push(`/receta/${data.receta.id}`)
+        return
       }
-      router.push('/receta/mock-001')
-    }, 4000)
+
+      // Manejo de errores del backend
+      setCargando(false)
+      switch (data.error) {
+        case 'sin_ingredientes':
+          router.push('/despensa')
+          break
+        case 'limite_diario':
+          router.push('/premium')
+          break
+        case 'sesion_no_encontrada':
+        case 'sin_sesion':
+          router.push('/bienvenida')
+          break
+        case 'alergia_detectada':
+          setError(data.mensaje || 'Esa receta contiene un ingrediente al que eres alérgico. Prueba otro tipo.')
+          break
+        default:
+          setError(data.mensaje || 'No se pudo generar la receta. Intenta de nuevo.')
+      }
+    } catch (e) {
+      setCargando(false)
+      setError('Sin conexión. Revisa tu internet.')
+    }
   }
 
-  // ----- VISTA DE CARGA -----
   if (cargando) {
     return (
       <main className="min-h-screen bg-crema flex flex-col items-center justify-center px-5 py-8">
@@ -117,7 +153,6 @@ export default function PantallaGenerar() {
     )
   }
 
-  // ----- VISTA DE SELECCIÓN -----
   return (
     <main className="min-h-screen bg-crema flex flex-col px-5 py-6 pb-8">
       <div className="flex items-center justify-between pb-4">
@@ -148,7 +183,7 @@ export default function PantallaGenerar() {
             <button
               key={t.id}
               onClick={() => setSeleccionado(t.id)}
-              className="flex flex-col items-start p-4 rounded-2xl text-left transition-all active:scale-98"
+              className="flex flex-col items-start p-4 rounded-2xl text-left transition-all active:scale-98 relative"
               style={{
                 background: activo ? t.color : '#ffffff',
                 border: `${activo ? 2 : 1}px solid ${activo ? t.borde : '#c5c8bd40'}`,
@@ -217,6 +252,10 @@ export default function PantallaGenerar() {
       )}
 
       <div className="flex-1" />
+
+      {error && (
+        <p className="text-xs text-salmon font-medium text-center mb-2">{error}</p>
+      )}
 
       <button
         onClick={handleGenerar}
