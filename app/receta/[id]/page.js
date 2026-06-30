@@ -6,82 +6,92 @@ import { useRouter } from 'next/navigation'
 export default function PantallaReceta({ params }) {
   const router = useRouter()
   const [receta, setReceta] = useState(null)
+  const [error, setError] = useState('')
   const [guardada, setGuardada] = useState(false)
   const [cocinando, setCocinando] = useState(false)
   const [confetti, setConfetti] = useState(false)
   const [rachaNueva, setRachaNueva] = useState(null)
 
-  useEffect(() => {
-    // 🔌 BACKEND: Reemplazar por:
-    // fetch(`/api/receta/${params.id}`).then(r => r.json()).then(d => setReceta(d.receta))
+  const cargarReceta = async () => {
+    try {
+      // 🔌 BACKEND: lee la receta real
+      const res = await fetch(`/api/receta/${params.id}`, { cache: 'no-store' })
+      const data = await res.json()
 
-    setTimeout(() => {
-      setReceta({
-        id: params.id,
-        titulo: 'Chilaquiles Verdes con Crunch de Pepita',
-        emoji: '🌶️',
-        imagen_url: null,
-        estilo: 'moderna',
-        tiempo_minutos: 15,
-        porciones: 2,
-        descripcion: 'Versión moderna con yogur griego en lugar de crema. Crujientes, frescos y cargados de proteína.',
-        ingredientes: [
-          { nombre: 'Totopos horneados', cantidad: '2 tazas' },
-          { nombre: 'Salsa verde casera', cantidad: '1 taza' },
-          { nombre: 'Yogur griego natural', cantidad: '1/2 taza' },
-          { nombre: 'Pollo desmenuzado', cantidad: '150g' },
-          { nombre: 'Cebolla morada', cantidad: '1/4' },
-          { nombre: 'Cilantro fresco', cantidad: 'al gusto' },
-        ],
-        ingredientes_pro: [
-          { nombre: 'Pepitas tostadas', cantidad: '2 cdas', razon: 'Le da crunch y proteína extra sin agregar carbos' },
-          { nombre: 'Aguacate en cubos', cantidad: '1/2', razon: 'Suma grasas buenas y cremosidad' },
-        ],
-        instrucciones: [
-          'Calienta la salsa verde en una sartén a fuego medio durante 2 minutos.',
-          'Agrega los totopos y revuelve suavemente hasta que se cubran sin perder el crunch.',
-          'Sirve en plato hondo. Encima coloca el pollo desmenuzado y la cebolla morada.',
-          'Termina con una cucharada generosa de yogur griego y cilantro fresco.',
-          'Si tienes los ingredientes Pro, agrégalos al final para un toque gourmet.',
-        ],
-        macros: {
-          proteina_g: 28,
-          carbos_g: 32,
-          grasas_g: 12,
-          calorias: 340,
-          azucar_g: 4,
-          fibra_g: 6,
-          sodio_mg: 480,
-        },
-        alergias_presentes: [],
-        guardada: false,
-      })
-    }, 500)
-  }, [params.id])
-
-  const toggleGuardar = () => {
-    // 🔌 BACKEND: Reemplazar por:
-    // const method = guardada ? 'DELETE' : 'POST'
-    // fetch('/api/receta/guardar', { method, body: JSON.stringify({ receta_id: params.id }) })
-    setGuardada(!guardada)
+      if (data.ok && data.receta) {
+        setReceta(data.receta)
+        setGuardada(!!data.receta.guardada)
+      } else {
+        if (data.error === 'sin_sesion' || data.error === 'sesion_no_encontrada') {
+          router.push('/bienvenida')
+          return
+        }
+        setError('No pudimos cargar la receta.')
+      }
+    } catch (e) {
+      setError('Sin conexión. Revisa tu internet.')
+    }
   }
 
-  const handleCocine = () => {
+  useEffect(() => {
+    cargarReceta()
+  }, [params.id])
+
+  const toggleGuardar = async () => {
+    const nuevoEstado = !guardada
+    setGuardada(nuevoEstado) // optimista
+
+    try {
+      // 🔌 BACKEND: guarda o quita de favoritos
+      await fetch('/api/receta/guardar', {
+        method: nuevoEstado ? 'POST' : 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ receta_id: params.id }),
+      })
+    } catch (e) {
+      setGuardada(!nuevoEstado) // revierte si falla
+    }
+  }
+
+  const handleCocine = async () => {
     if (cocinando) return
     setCocinando(true)
 
-    // 🔌 BACKEND: Reemplazar por:
-    // fetch('/api/receta/confirmar-cocina', { method: 'POST', body: JSON.stringify({ receta_id: params.id }) })
-    //   .then(r => r.json())
-    //   .then(d => { setRachaNueva(d.racha_nueva); if (d.racha_nueva_record) setConfetti(true) })
+    try {
+      // 🔌 BACKEND: confirma que cocinó → sube racha + descuenta despensa
+      const res = await fetch('/api/receta/confirmar-cocina', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ receta_id: params.id }),
+      })
 
-    setTimeout(() => {
-      const rachaActual = parseInt(localStorage.getItem('munchy_racha') || '5')
-      const nueva = rachaActual + 1
-      localStorage.setItem('munchy_racha', String(nueva))
-      setRachaNueva(nueva)
-      setConfetti(true)
-    }, 1200)
+      const data = await res.json()
+
+      if (data.ok) {
+        setRachaNueva(data.racha_nueva)
+        setConfetti(true)
+      } else {
+        setCocinando(false)
+      }
+    } catch (e) {
+      setCocinando(false)
+    }
+  }
+
+  if (error) {
+    return (
+      <main className="min-h-screen bg-crema flex flex-col items-center justify-center px-5">
+        <p className="text-sm text-salmon font-medium text-center mb-4">{error}</p>
+        <div className="flex gap-2">
+          <button onClick={() => { setError(''); cargarReceta() }} className="h-11 px-6 bg-olivo text-white rounded-xl text-sm font-semibold">
+            Reintentar
+          </button>
+          <button onClick={() => router.push('/casa')} className="h-11 px-6 border border-olivoClaro text-olivoOscuro rounded-xl text-sm font-semibold">
+            Ir a casa
+          </button>
+        </div>
+      </main>
+    )
   }
 
   if (!receta) {
@@ -116,7 +126,7 @@ export default function PantallaReceta({ params }) {
 
         <div className="text-7xl mb-4">🔥</div>
         <h1 className="font-serif text-3xl text-olivoOscuro text-center mb-2">
-          ¡{rachaNueva} días seguidos!
+          {rachaNueva ? `¡${rachaNueva} días seguidos!` : '¡Receta cocinada!'}
         </h1>
         <p className="text-base text-olivoOscuro opacity-70 text-center max-w-xs mb-8">
           La despensa se actualizó y tu racha sigue viva, <span className="font-semibold">campeón</span>.
