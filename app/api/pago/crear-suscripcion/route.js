@@ -49,7 +49,6 @@ export async function POST(request) {
           reason: 'Munchy Pro - Recetas ilimitadas',
           external_reference: user.id,
           payer_email: correo,
-          status: 'pending',
           back_url: 'https://munchy-xi.vercel.app',
           auto_recurring: {
             frequency: 1,
