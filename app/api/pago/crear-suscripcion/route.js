@@ -42,21 +42,37 @@ export async function POST(request) {
     // 4. Crear la suscripción en Mercado Pago ($80 MXN al mes)
     const client = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN })
 
-    const suscripcion = await new PreApproval(client).create({
-      body: {
-        reason: 'Munchy Pro - Recetas ilimitadas',
-        external_reference: user.id,
-        payer_email: correo,
-        status: 'pending',
-        back_url: 'https://munchy-xi.vercel.app',
-        auto_recurring: {
-          frequency: 1,
-          frequency_type: 'months',
-          transaction_amount: 80,
-          currency_id: 'MXN',
+    let suscripcion
+    try {
+      suscripcion = await new PreApproval(client).create({
+        body: {
+          reason: 'Munchy Pro - Recetas ilimitadas',
+          external_reference: user.id,
+          payer_email: correo,
+          status: 'pending',
+          back_url: 'https://munchy-xi.vercel.app',
+          auto_recurring: {
+            frequency: 1,
+            frequency_type: 'months',
+            transaction_amount: 80,
+            currency_id: 'MXN',
+          },
         },
-      },
-    })
+      })
+    } catch (mpError) {
+      // AJUSTE TEMPORAL: mostrar el error COMPLETO de Mercado Pago
+      let detalleMP
+      try {
+        detalleMP = JSON.stringify(mpError, Object.getOwnPropertyNames(mpError))
+      } catch {
+        detalleMP = String(mpError)
+      }
+      console.error('DETALLE MP crear-suscripcion:', detalleMP)
+      return NextResponse.json(
+        { ok: false, error: 'mp_rechazo', mensaje: 'Mercado Pago rechazó la suscripción.', detalle: detalleMP },
+        { status: 502 }
+      )
+    }
 
     // 5. Guardar el folio de la suscripción en la fila del usuario
     if (suscripcion?.id) {
