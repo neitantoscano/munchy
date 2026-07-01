@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabase } from '@/lib/supabase-server'
-import { MercadoPagoConfig, PreApproval } from 'mercadopago'
 
 export async function POST(request) {
   try {
@@ -26,7 +25,7 @@ export async function POST(request) {
 
     if (!correo || typeof correo !== 'string' || !correo.includes('@')) {
       return NextResponse.json(
-        { ok: false, error: 'correo_invalido', mensaje: 'Necesitamos un correo válido para tu suscripción.' },
+        { ok: false, error: 'correo_invalido', mensaje: 'Necesitamos un correo válido.' },
         { status: 400 }
       )
     }
@@ -34,73 +33,65 @@ export async function POST(request) {
     // 3. Verificar token
     if (!process.env.MP_ACCESS_TOKEN) {
       return NextResponse.json(
-        { ok: false, error: 'config_faltante', mensaje: 'Falta configurar el pago. Intenta más tarde.' },
+        { ok: false, error: 'config_faltante', mensaje: 'Falta configurar el pago.' },
         { status: 500 }
       )
     }
 
-    // Fecha de fin: dentro de 1 año (formato ISO), DENTRO de auto_recurring
+    // Fechas ISO (dentro de auto_recurring)
+    const inicio = new Date()
     const fin = new Date()
     fin.setFullYear(fin.getFullYear() + 1)
-    const endDate = fin.toISOString()
 
-    // 4. Crear la suscripción en Mercado Pago ($80 MXN al mes)
-    const client = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN })
+    // 4. Request MÍNIMO directo a Mercado Pago (para diagnóstico + capturar x-request-id)
+    const uuid = crypto.randomUUID()
 
-    let suscripcion
+    const payload = {
+      reason: 'Munchy Pro',
+      payer_email: correo,
+      status: 'pending',
+      back_url: 'https://munchy-xi.vercel.app',
+      auto_recurring: {
+        frequency: 1,
+        frequency_type: 'months',
+        transaction_amount: 80,
+        currency_id: 'MXN',
+        start_date: inicio.toISOString(),
+        end_date: fin.toISOString(),
+      },
+    }
+
+    const mpResp = await fetch('https://api.mercadopago.com/preapproval', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}`,
+        'X-Idempotency-Key': uuid,
+      },
+      body: JSON.stringify(payload),
+    })
+
+    const requestId = mpResp.headers.get('x-request-id')
+    let mpBody
     try {
-      suscripcion = await new PreApproval(client).create({
-        body: {
-          reason: 'Munchy Pro - Recetas ilimitadas',
-          external_reference: user.id,
-          payer_email: correo,
-          status: 'pending',
-          back_url: 'https://munchy-xi.vercel.app',
-          auto_recurring: {
-            frequency: 1,
-            frequency_type: 'months',
-            transaction_amount: 80,
-            currency_id: 'MXN',
-            end_date: endDate,
-          },
-        },
-      })
-    } catch (mpError) {
-      let detalleMP
-      try {
-        detalleMP = JSON.stringify(mpError, Object.getOwnPropertyNames(mpError))
-      } catch {
-        detalleMP = String(mpError)
-      }
-      console.error('DETALLE MP crear-suscripcion:', detalleMP)
-      return NextResponse.json(
-        { ok: false, error: 'mp_rechazo', mensaje: 'Mercado Pago rechazó la suscripción.', detalle: detalleMP },
-        { status: 502 }
-      )
+      mpBody = await mpResp.json()
+    } catch {
+      mpBody = null
     }
 
-    // 5. Guardar el folio de la suscripción
-    if (suscripcion?.id) {
-      await supabase
-        .from('usuarios')
-        .update({ mp_suscripcion_id: suscripcion.id })
-        .eq('id', user.id)
-    }
-
-    // 6. Devolver el link de pago
-    if (!suscripcion?.init_point) {
-      return NextResponse.json(
-        { ok: false, error: 'sin_link', mensaje: 'No se pudo generar el link de pago. Intenta de nuevo.' },
-        { status: 502 }
-      )
-    }
-
-    return NextResponse.json({ ok: true, url_pago: suscripcion.init_point })
+    // Devolvemos TODO para diagnóstico
+    return NextResponse.json({
+      ok: mpResp.status === 201 || mpResp.status === 200,
+      http_status: mpResp.status,
+      x_request_id: requestId,
+      init_point: mpBody?.init_point ?? null,
+      respuesta_mp: mpBody,
+    })
 
   } catch (err) {
     console.error('Error en crear-suscripcion:', err)
     return NextResponse.json(
-      { ok: false, error: 'error_servidor', mensaje: 'Algo salió mal al crear tu suscripción. Intenta de nuevo.' },
+      { ok: false, error: 'error_servidor', mensaje: 'Algo salió mal.' },
       { status: 500 }
     )
   }
