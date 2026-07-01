@@ -39,6 +39,11 @@ export async function POST(request) {
       )
     }
 
+    // Fecha de fin: dentro de 1 año (formato ISO), DENTRO de auto_recurring
+    const fin = new Date()
+    fin.setFullYear(fin.getFullYear() + 1)
+    const endDate = fin.toISOString()
+
     // 4. Crear la suscripción en Mercado Pago ($80 MXN al mes)
     const client = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN })
 
@@ -56,6 +61,7 @@ export async function POST(request) {
             frequency_type: 'months',
             transaction_amount: 80,
             currency_id: 'MXN',
+            end_date: endDate,
           },
         },
       })
