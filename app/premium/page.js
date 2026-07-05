@@ -1,11 +1,9 @@
 'use client'
 
-import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 export default function PantallaPremium() {
   const router = useRouter()
-  const [cargando, setCargando] = useState(false)
 
   const beneficios = [
     { icono: '♾️', titulo: 'Recetas ilimitadas', sub: 'Genera todas las que quieras, sin límite diario' },
@@ -13,26 +11,6 @@ export default function PantallaPremium() {
     { icono: '✨', titulo: 'Ingredientes Pro siempre', sub: 'Sugerencias gourmet en cada receta' },
     { icono: '🚫', titulo: 'Sin anuncios', sub: 'Experiencia limpia, enfocada en cocinar' },
   ]
-
-  const pagar = async () => {
-    setCargando(true)
-
-    try {
-      // 🔌 BACKEND: genera el link de pago de Mercado Pago
-      const res = await fetch('/api/pagos/crear-preferencia', { method: 'POST' })
-      const data = await res.json()
-
-      if (data.ok && data.url_pago) {
-        window.location.href = data.url_pago
-      } else {
-        alert('No se pudo generar el pago. Intenta de nuevo.')
-        setCargando(false)
-      }
-    } catch (e) {
-      alert('Sin conexión. Revisa tu internet.')
-      setCargando(false)
-    }
-  }
 
   return (
     <main className="min-h-screen pb-28"
@@ -96,16 +74,14 @@ export default function PantallaPremium() {
       <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md px-5 pb-5 pt-3 z-40"
            style={{ background: 'linear-gradient(to top, rgba(250,249,245,1) 70%, rgba(250,249,245,0))' }}>
         <button
-          onClick={pagar}
-          disabled={cargando}
+          onClick={() => router.push('/premium/pago')}
           className="w-full h-14 rounded-2xl font-semibold text-sm tracking-wide flex items-center justify-center gap-2 text-white active:scale-95 transition-all"
           style={{
             background: 'linear-gradient(135deg, #c47c1a, #8f4c35)',
             boxShadow: '0 8px 24px rgba(196,124,26,0.3)',
-            opacity: cargando ? 0.7 : 1,
           }}
         >
-          {cargando ? 'Conectando...' : '👑 Pagar con Mercado Pago'}
+          👑 Hacerme Premium
         </button>
         <p className="text-center text-xs text-olivoOscuro opacity-50 mt-2">
           Pago seguro procesado por Mercado Pago
