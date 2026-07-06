@@ -14,15 +14,19 @@ export async function POST(request) {
       )
     }
 
-    // 2. Recibir el correo del frontend
+    // 2. Leer el body (formData del Brick + correo)
     let body
     try {
       body = await request.json()
     } catch {
       body = {}
     }
-    const correo = body?.correo
 
+    const correo = body?.correo
+    // El token de la tarjeta viene dentro del formData del Card Payment Brick como "token"
+    const cardToken = body?.token
+
+    // 3. Validaciones
     if (!correo || typeof correo !== 'string' || !correo.includes('@')) {
       return NextResponse.json(
         { ok: false, error: 'correo_invalido', mensaje: 'Necesitamos un correo válido.' },
@@ -30,7 +34,13 @@ export async function POST(request) {
       )
     }
 
-    // 3. Verificar token
+    if (!cardToken || typeof cardToken !== 'string') {
+      return NextResponse.json(
+        { ok: false, error: 'token_faltante', mensaje: 'No llegó el token de la tarjeta.' },
+        { status: 400 }
+      )
+    }
+
     if (!process.env.MP_ACCESS_TOKEN) {
       return NextResponse.json(
         { ok: false, error: 'config_faltante', mensaje: 'Falta configurar el pago.' },
@@ -38,26 +48,21 @@ export async function POST(request) {
       )
     }
 
-    // Fechas ISO (dentro de auto_recurring)
-    const inicio = new Date()
-    const fin = new Date()
-    fin.setFullYear(fin.getFullYear() + 1)
-
-    // 4. Request MÍNIMO directo a Mercado Pago (para diagnóstico + capturar x-request-id)
+    // 4. Armar la suscripción (modelo authorized)
     const uuid = crypto.randomUUID()
 
     const payload = {
       reason: 'Munchy Pro',
+      external_reference: user.id,
       payer_email: correo,
-      status: 'pending',
+      card_token_id: cardToken,
+      status: 'authorized',
       back_url: 'https://munchy-xi.vercel.app',
       auto_recurring: {
         frequency: 1,
         frequency_type: 'months',
         transaction_amount: 80,
         currency_id: 'MXN',
-        start_date: inicio.toISOString(),
-        end_date: fin.toISOString(),
       },
     }
 
@@ -79,14 +84,33 @@ export async function POST(request) {
       mpBody = null
     }
 
-    // Devolvemos TODO para diagnóstico
-    return NextResponse.json({
-      ok: mpResp.status === 201 || mpResp.status === 200,
-      http_status: mpResp.status,
-      x_request_id: requestId,
-      init_point: mpBody?.init_point ?? null,
-      respuesta_mp: mpBody,
-    })
+    // 5. Si MP no aceptó, devolver diagnóstico (incluye x-request-id para soporte)
+    if (mpResp.status !== 200 && mpResp.status !== 201) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'mp_rechazo',
+          mensaje: 'Mercado Pago no aceptó la suscripción.',
+          http_status: mpResp.status,
+          x_request_id: requestId,
+          respuesta_mp: mpBody,
+        },
+        { status: 502 }
+      )
+    }
+
+    // 6. Guardar el id de la suscripción en la fila del usuario (respaldo para cancelar)
+    //    Nota: es_premium NO se toca aquí; eso lo escribe SOLO el webhook.
+    const suscripcionId = mpBody?.id ?? null
+    if (suscripcionId) {
+      await supabase
+        .from('usuarios')
+        .update({ mp_suscripcion_id: suscripcionId })
+        .eq('id', user.id)
+    }
+
+    // 7. Éxito
+    return NextResponse.json({ ok: true })
 
   } catch (err) {
     console.error('Error en crear-suscripcion:', err)
