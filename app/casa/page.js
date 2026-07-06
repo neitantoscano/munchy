@@ -22,6 +22,7 @@ export default function PantallaCasa() {
           es_premium: !!data.es_premium,
           ingredientes_en_despensa: data.ingredientes_en_despensa ?? 0,
           dato_curioso: data.dato_curioso || '',
+          frase_premium: data.frase_premium || null,
           primera_vez: !!data.primera_vez,
         })
       } else {
@@ -77,6 +78,19 @@ export default function PantallaCasa() {
     ? 'Recetas ilimitadas'
     : `${datos.recetas_restantes_hoy} ${datos.recetas_restantes_hoy === 1 ? 'receta gratis' : 'recetas gratis'} hoy`
 
+  // Texto que se muestra en el bloque de Munchie:
+  // - Premium con frase → la frase del día
+  // - Si no → el mensaje de bienvenida de siempre
+  const mensajeMunchie = datos.frase_premium
+    ? datos.frase_premium
+    : (datos.primera_vez
+        ? `Te tengo una sorpresa, ${datos.apodo}. Tu primera receta es de regalo 🎁`
+        : `${datos.apodo}, hoy tengo ideas perfectas para ti.`)
+
+  const tituloMunchie = datos.frase_premium
+    ? '👑 Tu momento Premium'
+    : '¡Qué onda, soy Munchie!'
+
   return (
     <main className="min-h-screen bg-crema pb-24">
       <div className="px-5 pt-5 pb-3 flex items-center justify-between sticky top-0 z-10" style={{ background: 'rgba(250,249,245,0.9)', backdropFilter: 'blur(14px)' }}>
@@ -131,12 +145,13 @@ export default function PantallaCasa() {
               <img src="/icons/munchie-feliz.png" alt="Munchie" width={48} height={48} onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement.innerHTML = '<span style="font-size:32px">🤖</span>' }} />
             </div>
             <div className="flex-1">
-              <p className="text-xs font-bold uppercase tracking-wider text-salmon mb-1">¡Qué onda, soy Munchie!</p>
-              <p className="font-serif text-lg text-white leading-snug">
-                {datos.primera_vez
-                  ? `Te tengo una sorpresa, ${datos.apodo}. Tu primera receta es de regalo 🎁`
-                  : `${datos.apodo}, hoy tengo ideas perfectas para ti.`}
-              </p>
+              <p className="text-xs font-bold uppercase tracking-wider text-salmon mb-1">{tituloMunchie}</p>
+              <p className="font-serif text-lg text-white leading-snug">{mensajeMunchie}</p>
+              {datos.frase_premium && (
+                <p className="text-[10px] text-olivoClaro/60 mt-2 leading-relaxed">
+                  Frases para inspirarte, no son asesoría financiera ni médica.
+                </p>
+              )}
             </div>
           </div>
         </div>
