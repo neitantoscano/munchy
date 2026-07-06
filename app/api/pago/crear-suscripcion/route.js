@@ -22,6 +22,9 @@ export async function POST(request) {
       body = {}
     }
 
+    // ─── LOG TEMPORAL: ver qué manda el frontend (quitar después) ───
+    console.log('BODY_RECIBIDO:', JSON.stringify(body))
+
     const correo = body?.correo
     // El token de la tarjeta viene dentro del formData del Card Payment Brick como "token"
     const cardToken = body?.token
