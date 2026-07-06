@@ -45,7 +45,6 @@ export async function GET() {
     const hoy = fechaMexico()
 
     // 2. Calcular recetas restantes hoy (con conciencia de fecha)
-    // Si el contador es de un día viejo, hoy va en 0.
     const usadasHoy =
       perfil.fecha_contador && String(perfil.fecha_contador).substring(0, 10) === hoy
         ? (perfil.recetas_hoy || 0)
@@ -59,7 +58,6 @@ export async function GET() {
     }
 
     // 3. Calcular la racha real (con conciencia de fecha)
-    // Si la última cocina fue hace 2+ días, la racha ya se rompió → mostrar 0.
     let racha_dias = perfil.racha_dias || 0
     if (racha_dias > 0 && perfil.ultima_visita) {
       const ultima = String(perfil.ultima_visita).substring(0, 10)
@@ -80,7 +78,13 @@ export async function GET() {
     // 5. Elegir el dato curioso del día
     const dato_curioso = await obtenerDatoDelDia(supabase)
 
-    // 6. Armar la respuesta con los nombres exactos que pidió el frontend
+    // 6. Si es premium, elegir la frase premium del día (si no, null)
+    let frase_premium = null
+    if (perfil.es_premium) {
+      frase_premium = await obtenerFrasePremiumDelDia(supabase)
+    }
+
+    // 7. Armar la respuesta con los nombres exactos que pidió el frontend
     return NextResponse.json({
       ok: true,
       apodo: perfil.apodo || 'Munchie Fan',
@@ -89,6 +93,7 @@ export async function GET() {
       es_premium: perfil.es_premium || false,
       ingredientes_en_despensa: ingredientes_en_despensa,
       dato_curioso: dato_curioso,
+      frase_premium: frase_premium,
       primera_vez: perfil.primera_vez ?? true
     })
 
@@ -100,14 +105,7 @@ export async function GET() {
 // ─── Función: obtener el dato curioso según el día del año ───
 async function obtenerDatoDelDia(supabase) {
   try {
-    const ahora = new Date()
-    const inicioAno = new Date(ahora.getFullYear(), 0, 0)
-    const diff = ahora - inicioAno
-    const unDia = 1000 * 60 * 60 * 24
-    let diaDelAno = Math.floor(diff / unDia)
-
-    if (diaDelAno < 1) diaDelAno = 1
-    if (diaDelAno > 365) diaDelAno = 365
+    const diaDelAno = calcularDiaDelAno()
 
     const { data, error } = await supabase
       .from('datos_curiosos')
@@ -124,4 +122,47 @@ async function obtenerDatoDelDia(supabase) {
   } catch {
     return 'Comer saludable también puede ser delicioso. 🥗'
   }
+}
+
+// ─── Función: obtener la frase premium según el día del año ───
+// Rota entre las frases disponibles. Si hay menos frases que días,
+// usa el módulo para que igual haya una frase cada día.
+async function obtenerFrasePremiumDelDia(supabase) {
+  try {
+    // Contar cuántas frases hay
+    const { count } = await supabase
+      .from('frases_premium')
+      .select('*', { count: 'exact', head: true })
+
+    if (!count || count === 0) return null
+
+    // Día del año → índice dentro del total de frases (rotación)
+    const diaDelAno = calcularDiaDelAno()
+    const orden = ((diaDelAno - 1) % count) + 1
+
+    const { data, error } = await supabase
+      .from('frases_premium')
+      .select('texto')
+      .eq('orden', orden)
+      .single()
+
+    if (error || !data) return null
+
+    return data.texto
+
+  } catch {
+    return null
+  }
+}
+
+// ─── Helper: día del año (1 a 365) ───
+function calcularDiaDelAno() {
+  const ahora = new Date()
+  const inicioAno = new Date(ahora.getFullYear(), 0, 0)
+  const diff = ahora - inicioAno
+  const unDia = 1000 * 60 * 60 * 24
+  let dia = Math.floor(diff / unDia)
+  if (dia < 1) dia = 1
+  if (dia > 365) dia = 365
+  return dia
 }
