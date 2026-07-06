@@ -99,17 +99,7 @@ export async function POST(request) {
       )
     }
 
-    // 6. Guardar el id de la suscripción en la fila del usuario (respaldo para cancelar)
-    //    Nota: es_premium NO se toca aquí; eso lo escribe SOLO el webhook.
-    const suscripcionId = mpBody?.id ?? null
-    if (suscripcionId) {
-      await supabase
-        .from('usuarios')
-        .update({ mp_suscripcion_id: suscripcionId })
-        .eq('id', user.id)
-    }
-
-    // 7. Éxito
+    // 6. Éxito. El webhook escribirá es_premium y mp_suscripcion_id.
     return NextResponse.json({ ok: true })
 
   } catch (err) {
