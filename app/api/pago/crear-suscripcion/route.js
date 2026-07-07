@@ -89,6 +89,9 @@ export async function POST(request) {
 
     // 5. Si MP no aceptó, devolver diagnóstico (incluye x-request-id para soporte)
     if (mpResp.status !== 200 && mpResp.status !== 201) {
+      // ─── LOG TEMPORAL: ver el motivo real de MP (quitar después) ───
+      console.log('MP_RECHAZO:', 'http_status=' + mpResp.status, 'x_request_id=' + requestId, 'respuesta_mp=' + JSON.stringify(mpBody))
+
       return NextResponse.json(
         {
           ok: false,
