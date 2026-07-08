@@ -5,11 +5,15 @@ import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { initMercadoPago } from '@mercadopago/sdk-react'
 
-// Carga el Brick SOLO en el navegador (nunca en el servidor)
 const CardPayment = dynamic(
   () => import('@mercadopago/sdk-react').then((mod) => mod.CardPayment),
   { ssr: false }
 )
+
+// ⚠️⚠️ TEMPORAL SOLO PARA PRUEBAS ⚠️⚠️
+// En producción, BORRA esta línea y usa el correo real del usuario
+// (cambia "correo: CORREO_PRUEBA" por "correo: correo.trim()" abajo)
+const CORREO_PRUEBA = 'TESTUSER438953120584698002@testuser.com'
 
 export default function PantallaPago() {
   const router = useRouter()
@@ -38,7 +42,11 @@ export default function PantallaPago() {
       fetch('/api/pago/crear-suscripcion', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...param, correo: correo.trim() }),
+        body: JSON.stringify({
+          ...param,
+          // ⚠️ TEMPORAL: en producción cambia CORREO_PRUEBA por correo.trim()
+          correo: CORREO_PRUEBA,
+        }),
       })
         .then((r) => r.json())
         .then((data) => {
