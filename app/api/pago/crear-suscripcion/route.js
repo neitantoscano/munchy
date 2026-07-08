@@ -51,7 +51,13 @@ export async function POST(request) {
       )
     }
 
-    // 4. Armar la suscripción (modelo authorized)
+    // 4. Fechas ISO para auto_recurring (start_date debe ir junto con end_date)
+    //    start_date: unos minutos en el futuro para no quedar en el pasado
+    const inicio = new Date(Date.now() + 5 * 60 * 1000) // +5 minutos
+    const fin = new Date()
+    fin.setFullYear(fin.getFullYear() + 1) // +1 año
+
+    // 5. Armar la suscripción (modelo authorized)
     const uuid = crypto.randomUUID()
 
     const payload = {
@@ -66,6 +72,8 @@ export async function POST(request) {
         frequency_type: 'months',
         transaction_amount: 80,
         currency_id: 'MXN',
+        start_date: inicio.toISOString(),
+        end_date: fin.toISOString(),
       },
     }
 
@@ -87,7 +95,7 @@ export async function POST(request) {
       mpBody = null
     }
 
-    // 5. Si MP no aceptó, devolver diagnóstico (incluye x-request-id para soporte)
+    // 6. Si MP no aceptó, devolver diagnóstico (incluye x-request-id para soporte)
     if (mpResp.status !== 200 && mpResp.status !== 201) {
       // ─── LOG TEMPORAL: ver el motivo real de MP (quitar después) ───
       console.log('MP_RECHAZO:', 'http_status=' + mpResp.status, 'x_request_id=' + requestId, 'respuesta_mp=' + JSON.stringify(mpBody))
@@ -105,7 +113,7 @@ export async function POST(request) {
       )
     }
 
-    // 6. Éxito. El webhook escribirá es_premium y mp_suscripcion_id.
+    // 7. Éxito. El webhook escribirá es_premium y mp_suscripcion_id.
     return NextResponse.json({ ok: true })
 
   } catch (err) {
