@@ -36,10 +36,10 @@ export default function PantallaBienvenida() {
   }
 
   return (
-    <main className="min-h-screen bg-crema flex flex-col px-5 py-8">
+    <main className="min-h-screen bg-black flex flex-col px-5 py-8">
 
       <div className="flex justify-center pt-4 pb-2">
-        <span className="font-serif text-2xl text-olivo">Munchy</span>
+        <span className="font-serif text-2xl text-crema">Munchy</span>
       </div>
 
       <div className="flex-1 flex flex-col justify-center items-center text-center px-2">
@@ -64,12 +64,12 @@ export default function PantallaBienvenida() {
           </span>
         </div>
 
-        <h1 className="font-serif text-4xl text-olivoOscuro leading-tight mb-3">
+        <h1 className="font-serif text-4xl text-crema leading-tight mb-3">
           Nutre tu<br />
-          <em className="text-cafeTierra">mejor versión.</em>
+          <em className="text-white">prime</em>
         </h1>
 
-        <p className="text-base text-olivoOscuro opacity-70 mb-8 max-w-xs leading-relaxed">
+        <p className="text-base text-crema opacity-70 mb-8 max-w-xs leading-relaxed">
           Antojos saludables, hechos para ti. ¿Cómo te llamamos?
         </p>
 
@@ -83,7 +83,7 @@ export default function PantallaBienvenida() {
             className="w-full px-5 py-4 rounded-2xl border border-olivoClaro bg-white text-olivoOscuro text-center text-base font-medium focus:outline-none focus:border-olivo transition-colors"
           />
         </div>
-        <p className="text-xs text-olivoOscuro opacity-50 mb-2">
+        <p className="text-xs text-crema opacity-50 mb-2">
           Puedes cambiarlo después
         </p>
 
