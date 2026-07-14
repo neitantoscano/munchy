@@ -36,13 +36,23 @@ export default function PantallaBienvenida() {
   }
 
   return (
-    <main className="min-h-screen bg-black flex flex-col px-5 py-8">
+    <main className="relative min-h-screen bg-black flex flex-col px-5 py-8 overflow-hidden">
 
-      <div className="flex justify-center pt-4 pb-2">
+      {/* 🎨 Fondos neón (decorativos, no bloquean toques) */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-24 -left-20 w-72 h-72 rounded-full"
+             style={{ background: '#4ade80', filter: 'blur(100px)', opacity: 0.35 }} />
+        <div className="absolute top-1/4 -right-24 w-80 h-80 rounded-full"
+             style={{ background: '#a855f7', filter: 'blur(110px)', opacity: 0.4 }} />
+        <div className="absolute bottom-1/4 -left-16 w-64 h-64 rounded-full"
+             style={{ background: '#fb923c', filter: 'blur(100px)', opacity: 0.3 }} />
+      </div>
+
+      <div className="relative z-10 flex justify-center pt-4 pb-2">
         <span className="font-serif text-2xl text-crema">Munchy</span>
       </div>
 
-      <div className="flex-1 flex flex-col justify-center items-center text-center px-2">
+      <div className="relative z-10 flex-1 flex flex-col justify-center items-center text-center px-2">
 
         <div className="w-full max-w-xs h-56 mb-8 rounded-3xl overflow-hidden relative"
              style={{ background: 'linear-gradient(135deg, #3d2b1f, #2d4a2d, #4a2060)' }}>
@@ -95,7 +105,7 @@ export default function PantallaBienvenida() {
       <button
         onClick={handleEmpezar}
         disabled={cargando}
-        className="w-full h-14 bg-olivo text-white rounded-2xl font-semibold text-sm tracking-wide flex items-center justify-center gap-2 active:scale-95 transition-transform"
+        className="relative z-10 w-full h-14 bg-olivo text-white rounded-2xl font-semibold text-sm tracking-wide flex items-center justify-center gap-2 active:scale-95 transition-transform"
         style={{ boxShadow: '0 8px 24px rgba(46,58,35,0.25)', opacity: cargando ? 0.7 : 1 }}
       >
         {cargando ? 'Creando tu cuenta...' : 'Empezar'}
