@@ -51,9 +51,9 @@ export default function PantallaCasa() {
 
   if (error) {
     return (
-      <main className="min-h-screen bg-crema flex flex-col items-center justify-center px-5">
+      <main className="min-h-screen bg-black flex flex-col items-center justify-center px-5">
         <p className="text-sm text-salmon font-medium text-center mb-4">{error}</p>
-        <button onClick={cargarResumen} className="h-11 px-6 bg-olivo text-white rounded-xl text-sm font-semibold">
+        <button onClick={cargarResumen} className="h-11 px-6 bg-olivo text-white rounded-xl text-sm font-semibold" style={{ boxShadow: '0 0 18px rgba(255,255,255,0.12)' }}>
           Reintentar
         </button>
       </main>
@@ -62,14 +62,14 @@ export default function PantallaCasa() {
 
   if (!datos) {
     return (
-      <main className="min-h-screen bg-crema flex items-center justify-center">
+      <main className="min-h-screen bg-black flex items-center justify-center">
         <div className="flex gap-2">
           {[0,1,2].map(i => (
-            <div key={i} className="w-2.5 h-2.5 rounded-full bg-olivo"
+            <div key={i} className="w-2.5 h-2.5 rounded-full bg-crema"
                  style={{ animation: 'pulso 1.2s ease-in-out infinite', animationDelay: `${i*0.2}s`, opacity: 0.3 }} />
           ))}
         </div>
-        <style jsx>{`@keyframes pulso { 0%,100% { opacity:0.3; transform:scale(1) } 50% { opacity:1; transform:scale(1.3) } }`}</style>
+        <style jsx global>{`@keyframes pulso { 0%,100% { opacity:0.3; transform:scale(1) } 50% { opacity:1; transform:scale(1.3) } }`}</style>
       </main>
     )
   }
@@ -92,18 +92,29 @@ export default function PantallaCasa() {
     : '¡Qué onda, soy Munchie!'
 
   return (
-    <main className="min-h-screen bg-crema pb-24">
-      <div className="px-5 pt-5 pb-3 flex items-center justify-between sticky top-0 z-10" style={{ background: 'rgba(250,249,245,0.9)', backdropFilter: 'blur(14px)' }}>
+    <main className="relative min-h-screen bg-black pb-24">
+
+      {/* 🎨 Glows neutros al centro (fijos, no bloquean toques) */}
+      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-72 h-72 rounded-full" style={{ background: '#c9cbd1', filter: 'blur(120px)', opacity: 0.14 }} />
+        <div className="absolute top-1/4 left-4 w-56 h-56 rounded-full" style={{ background: '#8a8f99', filter: 'blur(110px)', opacity: 0.12 }} />
+        <div className="absolute bottom-1/4 right-4 w-60 h-60 rounded-full" style={{ background: '#b0a99f', filter: 'blur(120px)', opacity: 0.12 }} />
+      </div>
+
+      {/* ✨ Glow lineal gris-blanco recubriendo la orilla */}
+      <div className="pointer-events-none fixed inset-0 z-40" style={{ boxShadow: 'inset 0 0 70px 3px rgba(255,255,255,0.16), inset 0 0 15px 1px rgba(255,255,255,0.22)', border: '1px solid rgba(255,255,255,0.10)' }} />
+
+      <div className="px-5 pt-5 pb-3 flex items-center justify-between sticky top-0 z-30" style={{ background: 'rgba(10,10,10,0.7)', backdropFilter: 'blur(14px)' }}>
         <div className="flex items-center gap-2">
-          <div className="relative w-10 h-10 rounded-full bg-olivoClaro border-2 border-olivoClaro flex items-center justify-center text-olivo font-bold" style={{ boxShadow: '0 0 0 2px rgba(46,58,35,0.2)' }}>
+          <div className="relative w-10 h-10 rounded-full bg-olivoClaro border-2 border-olivoClaro flex items-center justify-center text-olivo font-bold" style={{ boxShadow: '0 0 0 2px rgba(255,255,255,0.15)' }}>
             {datos.apodo[0]?.toUpperCase() || '?'}
             {datos.racha_dias > 0 && (
-              <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-salmon flex items-center justify-center text-white text-xs font-bold border-2 border-crema">
+              <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-salmon flex items-center justify-center text-white text-xs font-bold border-2 border-black">
                 {datos.racha_dias}
               </div>
             )}
           </div>
-          <span className="font-serif text-xl text-olivo">Munchy</span>
+          <span className="font-serif text-xl text-crema">Munchy</span>
         </div>
 
         <div className="flex items-center gap-1.5 bg-ambarFixed rounded-full px-3 py-1.5 border border-ambar/30">
@@ -112,10 +123,10 @@ export default function PantallaCasa() {
         </div>
       </div>
 
-      <div className="px-5">
+      <div className="relative z-10 px-5">
         <div className="pt-6 pb-6">
-          <h1 className="font-serif text-3xl text-olivoOscuro leading-tight mb-2">Buenos días, {datos.apodo}. 👋</h1>
-          <p className="text-sm text-olivoOscuro opacity-70 leading-relaxed">
+          <h1 className="font-serif text-3xl text-crema leading-tight mb-2">Buenos días, {datos.apodo}. 👋</h1>
+          <p className="text-sm text-crema opacity-70 leading-relaxed">
             {datos.primera_vez
               ? 'Tu primera receta es de regalo. ¿Listo para empezar?'
               : datos.ingredientes_en_despensa > 0
@@ -136,7 +147,7 @@ export default function PantallaCasa() {
           </div>
         )}
 
-        <div className="bg-olivo rounded-3xl p-5 mb-6 relative overflow-hidden">
+        <div className="bg-olivo rounded-3xl p-5 mb-6 relative overflow-hidden border border-white/10">
           <div className="absolute -top-5 -right-5 w-24 h-24 rounded-full opacity-10 bg-olivoClaro"></div>
           <div className="absolute -bottom-4 -left-4 w-16 h-16 rounded-full opacity-15 bg-salmon"></div>
 
@@ -156,7 +167,7 @@ export default function PantallaCasa() {
           </div>
         </div>
 
-        <button onClick={irAGenerar} className="w-full bg-olivo text-white rounded-2xl py-5 mb-6 active:scale-98 transition-transform" style={{ boxShadow: '0 8px 24px rgba(46,58,35,0.3)' }}>
+        <button onClick={irAGenerar} className="w-full bg-olivo text-white rounded-2xl py-5 mb-6 active:scale-98 transition-transform" style={{ animation: 'flotar 3.5s ease-in-out infinite', boxShadow: '0 0 22px rgba(255,255,255,0.14), 0 10px 28px rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.14)' }}>
           <div className="flex items-center justify-center gap-2 mb-1">
             <span className="text-xl">⚡</span>
             <span className="font-bold text-base tracking-wide">
@@ -168,8 +179,8 @@ export default function PantallaCasa() {
 
         <div className="mb-6">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-serif text-xl text-olivoOscuro">Mi Despensa</h2>
-            <button onClick={() => router.push('/despensa')} className="text-xs font-semibold text-cafeTierra bg-salmon/10 rounded-full px-3 py-1.5">Ver todo →</button>
+            <h2 className="font-serif text-xl text-crema">Mi Despensa</h2>
+            <button onClick={() => router.push('/despensa')} className="text-xs font-semibold text-salmon bg-salmon/10 rounded-full px-3 py-1.5">Ver todo →</button>
           </div>
 
           {datos.ingredientes_en_despensa === 0 ? (
@@ -205,7 +216,7 @@ export default function PantallaCasa() {
         </div>
       </nav>
 
-      <style jsx>{`
+      <style jsx global>{`
         @keyframes flotar {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-4px); }
