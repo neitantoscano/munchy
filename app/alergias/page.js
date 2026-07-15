@@ -52,26 +52,37 @@ export default function PantallaAlergias() {
   }
 
   return (
-    <main className="min-h-screen bg-crema flex flex-col px-5 py-6">
-      <div className="flex items-center justify-between pb-4">
+    <main className="relative min-h-screen bg-black flex flex-col px-5 py-6 overflow-hidden">
+
+      {/* 🎨 Fondos neón (colores nuevos, no bloquean toques) */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-20 -right-16 w-64 h-64 rounded-full"
+             style={{ background: '#22d3ee', filter: 'blur(100px)', opacity: 0.3 }} />
+        <div className="absolute top-1/2 -left-24 w-72 h-72 rounded-full"
+             style={{ background: '#ec4899', filter: 'blur(110px)', opacity: 0.32 }} />
+        <div className="absolute bottom-16 -right-20 w-64 h-64 rounded-full"
+             style={{ background: '#facc15', filter: 'blur(100px)', opacity: 0.25 }} />
+      </div>
+
+      <div className="relative z-10 flex items-center justify-between pb-4">
         <button onClick={() => router.back()} className="w-10 h-10 rounded-full bg-white border border-olivoClaro flex items-center justify-center text-olivo active:scale-95 transition-transform">←</button>
-        <span className="font-serif text-lg text-olivo">Munchy</span>
+        <span className="font-serif text-lg text-crema">Munchy</span>
         <div className="w-10" />
       </div>
 
-      <div className="flex gap-1 mb-8">
-        <div className="flex-1 h-1 rounded-full bg-olivo"></div>
-        <div className="flex-1 h-1 rounded-full bg-olivo"></div>
-        <div className="flex-1 h-1 rounded-full bg-olivoClaro opacity-40"></div>
+      <div className="relative z-10 flex gap-1 mb-8">
+        <div className="flex-1 h-1 rounded-full" style={{ background: '#22d3ee', boxShadow: '0 0 8px #22d3ee' }}></div>
+        <div className="flex-1 h-1 rounded-full" style={{ background: '#22d3ee', boxShadow: '0 0 8px #22d3ee' }}></div>
+        <div className="flex-1 h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.15)' }}></div>
       </div>
 
-      <div className="mb-6">
-        <p className="text-xs font-bold uppercase tracking-wider text-cafeTierra opacity-70 mb-2">Paso 2 de 3</p>
-        <h1 className="font-serif text-2xl text-olivoOscuro leading-tight mb-2">Cosas a las que eres alérgico<br />o tienes prohibido comer</h1>
-        <p className="text-sm text-olivoOscuro opacity-70 leading-relaxed">Selecciona todas las que apliquen. Munchy nunca te dará recetas con esto.</p>
+      <div className="relative z-10 mb-6">
+        <p className="text-xs font-bold uppercase tracking-wider text-salmon mb-2">Paso 2 de 3</p>
+        <h1 className="font-serif text-2xl text-crema leading-tight mb-2">Cosas a las que eres alérgico<br />o tienes prohibido comer</h1>
+        <p className="text-sm text-crema opacity-70 leading-relaxed">Selecciona todas las que apliquen. Munchy nunca te dará recetas con esto.</p>
       </div>
 
-      <div className="flex flex-col gap-3 mb-6">
+      <div className="relative z-10 flex flex-col gap-3 mb-6">
         {alergias.map(a => {
           const activa = seleccionadas.includes(a.id)
           return (
@@ -120,15 +131,19 @@ export default function PantallaAlergias() {
       <div className="flex-1" />
 
       {error && (
-        <p className="text-xs text-salmon font-medium text-center mb-2">{error}</p>
+        <p className="relative z-10 text-xs text-salmon font-medium text-center mb-2">{error}</p>
       )}
 
-      <div className="flex flex-col gap-3">
+      <div className="relative z-10 flex flex-col gap-3">
         <button
           onClick={() => guardarAlergias(seleccionadas)}
           disabled={cargando}
-          className="w-full h-14 bg-olivo text-white rounded-2xl font-semibold text-sm tracking-wide flex items-center justify-center gap-2 active:scale-95 transition-all"
-          style={{ boxShadow: '0 8px 24px rgba(46,58,35,0.25)', opacity: cargando ? 0.7 : 1 }}
+          className="w-full h-14 text-white rounded-2xl font-semibold text-sm tracking-wide flex items-center justify-center gap-2 active:scale-95 transition-all"
+          style={{
+            background: 'linear-gradient(135deg, #22d3ee, #ec4899)',
+            boxShadow: '0 0 24px rgba(236,72,153,0.4)',
+            opacity: cargando ? 0.7 : 1
+          }}
         >
           {cargando ? 'Guardando...' : (
             seleccionadas.length > 0
@@ -138,7 +153,7 @@ export default function PantallaAlergias() {
           {!cargando && <span>→</span>}
         </button>
 
-        <button onClick={() => guardarAlergias([])} disabled={cargando} className="text-sm text-olivoOscuro opacity-60 underline py-2">
+        <button onClick={() => guardarAlergias([])} disabled={cargando} className="text-sm text-crema opacity-70 underline py-2">
           No tengo alergias ni restricciones
         </button>
       </div>
