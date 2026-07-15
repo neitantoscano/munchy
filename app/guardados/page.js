@@ -35,21 +35,30 @@ export default function PantallaGuardados() {
   }, [])
 
   return (
-    <main className="min-h-screen bg-crema pb-28">
-      <div className="px-5 pt-5 pb-3 flex items-center justify-between sticky top-0 z-10"
-           style={{ background: 'rgba(250,249,245,0.9)', backdropFilter: 'blur(14px)' }}>
+    <main className="relative min-h-screen bg-black pb-28 overflow-hidden">
+
+      {/* 🎨 4 figuras neutras elegantes (decorativas, no bloquean toques) */}
+      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full" style={{ border: '1.5px solid rgba(91,107,130,0.35)' }} />
+        <div className="absolute top-28 -left-12 w-40 h-40 rounded-full" style={{ background: 'rgba(134,147,127,0.12)' }} />
+        <div className="absolute top-1/2 -right-6 w-24 h-24 rounded-full" style={{ border: '1px solid rgba(156,163,175,0.30)' }} />
+        <div className="absolute bottom-28 -left-8 w-32 h-32 rounded-3xl" style={{ background: 'rgba(91,107,130,0.10)', transform: 'rotate(18deg)' }} />
+      </div>
+
+      <div className="relative z-20 px-5 pt-5 pb-3 flex items-center justify-between sticky top-0"
+           style={{ background: 'rgba(10,10,10,0.7)', backdropFilter: 'blur(14px)' }}>
         <button
           onClick={() => router.back()}
           className="w-10 h-10 rounded-full bg-white border border-olivoClaro flex items-center justify-center text-olivo active:scale-95 transition-transform"
         >←</button>
-        <span className="font-serif text-xl text-olivo">Guardados</span>
+        <span className="font-serif text-xl text-crema">Guardados</span>
         <div className="w-10" />
       </div>
 
-      <div className="px-5">
+      <div className="relative z-10 px-5">
         <div className="pt-4 pb-5">
-          <h1 className="font-serif text-3xl text-olivoOscuro leading-tight mb-2">Tus Favoritos 🔖</h1>
-          <p className="text-sm text-olivoOscuro opacity-70 leading-relaxed">
+          <h1 className="font-serif text-3xl text-crema leading-tight mb-2">Tus Favoritos 🔖</h1>
+          <p className="text-sm text-crema opacity-70 leading-relaxed">
             {recetas.length > 0
               ? `${recetas.length} ${recetas.length === 1 ? 'receta guardada' : 'recetas guardadas'}, listas para repetir.`
               : 'Aquí guardas las recetas que más te gusten.'}
@@ -69,7 +78,7 @@ export default function PantallaGuardados() {
           <div className="flex justify-center py-12">
             <div className="flex gap-2">
               {[0,1,2].map(i => (
-                <div key={i} className="w-2.5 h-2.5 rounded-full bg-olivo"
+                <div key={i} className="w-2.5 h-2.5 rounded-full bg-crema"
                      style={{ animation: 'pulso 1.2s ease-in-out infinite', animationDelay: `${i*0.2}s`, opacity: 0.3 }} />
               ))}
             </div>
