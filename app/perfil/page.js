@@ -113,7 +113,7 @@ export default function PantallaPerfil() {
 
   if (error) {
     return (
-      <main className="min-h-screen bg-crema flex flex-col items-center justify-center px-5">
+      <main className="min-h-screen bg-black flex flex-col items-center justify-center px-5">
         <p className="text-sm text-salmon font-medium text-center mb-4">{error}</p>
         <button onClick={cargarPerfil} className="h-11 px-6 bg-olivo text-white rounded-xl text-sm font-semibold">
           Reintentar
@@ -124,10 +124,10 @@ export default function PantallaPerfil() {
 
   if (!datos) {
     return (
-      <main className="min-h-screen bg-crema flex items-center justify-center">
+      <main className="min-h-screen bg-black flex items-center justify-center">
         <div className="flex gap-2">
           {[0,1,2].map(i => (
-            <div key={i} className="w-2.5 h-2.5 rounded-full bg-olivo"
+            <div key={i} className="w-2.5 h-2.5 rounded-full bg-crema"
                  style={{ animation: 'pulso 1.2s ease-in-out infinite', animationDelay: `${i*0.2}s`, opacity: 0.3 }} />
           ))}
         </div>
@@ -137,24 +137,34 @@ export default function PantallaPerfil() {
   }
 
   return (
-    <main className="min-h-screen bg-crema pb-28">
-      <div className="px-5 pt-5 pb-3 flex items-center justify-between sticky top-0 z-10"
-           style={{ background: 'rgba(250,249,245,0.9)', backdropFilter: 'blur(14px)' }}>
+    <main className="relative min-h-screen bg-black pb-28 overflow-hidden">
+
+      {/* 🎨 5 figuras neutras elegantes (decorativas, no bloquean toques) */}
+      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full" style={{ border: '1.5px solid rgba(91,107,130,0.35)' }} />
+        <div className="absolute top-24 -left-12 w-40 h-40 rounded-full" style={{ background: 'rgba(134,147,127,0.12)' }} />
+        <div className="absolute top-1/2 -right-6 w-24 h-24 rounded-full" style={{ border: '1px solid rgba(156,163,175,0.30)' }} />
+        <div className="absolute bottom-32 -left-8 w-32 h-32 rounded-3xl" style={{ background: 'rgba(91,107,130,0.10)', transform: 'rotate(18deg)' }} />
+        <div className="absolute bottom-20 right-8 w-16 h-16 rounded-full" style={{ background: 'rgba(156,163,175,0.10)' }} />
+      </div>
+
+      <div className="relative z-20 px-5 pt-5 pb-3 flex items-center justify-between sticky top-0"
+           style={{ background: 'rgba(10,10,10,0.7)', backdropFilter: 'blur(14px)' }}>
         <button
           onClick={() => router.back()}
           className="w-10 h-10 rounded-full bg-white border border-olivoClaro flex items-center justify-center text-olivo active:scale-95 transition-transform"
         >←</button>
-        <span className="font-serif text-xl text-olivo">Perfil</span>
+        <span className="font-serif text-xl text-crema">Perfil</span>
         <div className="w-10" />
       </div>
 
-      <div className="px-5">
+      <div className="relative z-10 px-5">
         <div className="flex flex-col items-center pt-4 pb-6">
           <div className="w-24 h-24 rounded-full bg-olivo flex items-center justify-center text-white font-serif text-4xl mb-3 relative"
-               style={{ boxShadow: '0 8px 24px rgba(46,58,35,0.25)' }}>
+               style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.12)' }}>
             {datos.apodo[0]?.toUpperCase() || '?'}
             {datos.es_premium && (
-              <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-ambar flex items-center justify-center text-base border-2 border-crema">
+              <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-ambar flex items-center justify-center text-base border-2 border-black">
                 👑
               </div>
             )}
@@ -173,7 +183,7 @@ export default function PantallaPerfil() {
               <div className="flex gap-2">
                 <button
                   onClick={() => { setEditando(false); setNuevoApodo('') }}
-                  className="flex-1 h-10 rounded-xl border border-olivoClaro text-olivoOscuro text-sm font-medium active:scale-95"
+                  className="flex-1 h-10 rounded-xl border border-olivoClaro text-crema text-sm font-medium active:scale-95"
                 >Cancelar</button>
                 <button
                   onClick={guardarApodo}
@@ -185,15 +195,15 @@ export default function PantallaPerfil() {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <h1 className="font-serif text-2xl text-olivoOscuro">{datos.apodo}</h1>
+              <h1 className="font-serif text-2xl text-crema">{datos.apodo}</h1>
               <button
                 onClick={() => { setEditando(true); setNuevoApodo(datos.apodo) }}
-                className="text-olivoOscuro opacity-50 active:scale-90 transition-transform"
+                className="text-crema opacity-50 active:scale-90 transition-transform"
               >✏️</button>
             </div>
           )}
 
-          <p className="text-xs text-olivoOscuro opacity-50 mt-1">
+          <p className="text-xs text-crema opacity-50 mt-1">
             Miembro desde {formatearFecha(datos.miembro_desde)}
           </p>
         </div>
@@ -259,7 +269,7 @@ export default function PantallaPerfil() {
 
         <button
           onClick={cerrarSesion}
-          className="w-full h-12 rounded-2xl border border-salmon/50 text-cafeTierra text-sm font-semibold active:scale-95 transition-transform"
+          className="w-full h-12 rounded-2xl border border-salmon/50 text-salmon text-sm font-semibold active:scale-95 transition-transform"
         >
           Cerrar sesión
         </button>
