@@ -44,26 +44,37 @@ export default function PantallaEjercicio() {
   }
 
   return (
-    <main className="min-h-screen bg-crema flex flex-col px-5 py-6">
-      <div className="flex items-center justify-between pb-4">
+    <main className="relative min-h-screen bg-black flex flex-col px-5 py-6 overflow-hidden">
+
+      {/* 🎨 Fondos neón (colores nuevos, no bloquean toques) */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-20 -left-16 w-64 h-64 rounded-full"
+             style={{ background: '#3b82f6', filter: 'blur(100px)', opacity: 0.3 }} />
+        <div className="absolute top-1/2 -right-24 w-72 h-72 rounded-full"
+             style={{ background: '#f43f5e', filter: 'blur(110px)', opacity: 0.3 }} />
+        <div className="absolute bottom-16 -left-20 w-64 h-64 rounded-full"
+             style={{ background: '#a3e635', filter: 'blur(100px)', opacity: 0.25 }} />
+      </div>
+
+      <div className="relative z-10 flex items-center justify-between pb-4">
         <button onClick={() => router.back()} className="w-10 h-10 rounded-full bg-white border border-olivoClaro flex items-center justify-center text-olivo active:scale-95 transition-transform">←</button>
-        <span className="font-serif text-lg text-olivo">Munchy</span>
+        <span className="font-serif text-lg text-crema">Munchy</span>
         <div className="w-10" />
       </div>
 
-      <div className="flex gap-1 mb-8">
-        <div className="flex-1 h-1 rounded-full bg-olivo"></div>
-        <div className="flex-1 h-1 rounded-full bg-olivo"></div>
-        <div className="flex-1 h-1 rounded-full bg-olivo"></div>
+      <div className="relative z-10 flex gap-1 mb-8">
+        <div className="flex-1 h-1 rounded-full" style={{ background: '#3b82f6', boxShadow: '0 0 8px #3b82f6' }}></div>
+        <div className="flex-1 h-1 rounded-full" style={{ background: '#3b82f6', boxShadow: '0 0 8px #3b82f6' }}></div>
+        <div className="flex-1 h-1 rounded-full" style={{ background: '#3b82f6', boxShadow: '0 0 8px #3b82f6' }}></div>
       </div>
 
-      <div className="mb-8">
-        <p className="text-xs font-bold uppercase tracking-wider text-cafeTierra opacity-70 mb-2">Paso 3 de 3 — ¡Último!</p>
-        <h1 className="font-serif text-3xl text-olivoOscuro leading-tight mb-2">¿Te mueves?</h1>
-        <p className="text-base text-olivoOscuro opacity-70 leading-relaxed">Ajustamos las recetas a tu nivel de actividad.</p>
+      <div className="relative z-10 mb-8">
+        <p className="text-xs font-bold uppercase tracking-wider text-salmon mb-2">Paso 3 de 3 — ¡Último!</p>
+        <h1 className="font-serif text-3xl text-crema leading-tight mb-2">¿Te mueves?</h1>
+        <p className="text-base text-crema opacity-70 leading-relaxed">Ajustamos las recetas a tu nivel de actividad.</p>
       </div>
 
-      <div className="flex flex-col gap-3 mb-6">
+      <div className="relative z-10 flex flex-col gap-3 mb-6">
         {niveles.map(n => {
           const activo = seleccionado === n.id
           return (
@@ -111,16 +122,17 @@ export default function PantallaEjercicio() {
       <div className="flex-1" />
 
       {error && (
-        <p className="text-xs text-salmon font-medium text-center mb-2">{error}</p>
+        <p className="relative z-10 text-xs text-salmon font-medium text-center mb-2">{error}</p>
       )}
 
       <button
         onClick={handleFinalizar}
         disabled={!seleccionado || cargando}
-        className="w-full h-14 bg-olivo text-white rounded-2xl font-semibold text-sm tracking-wide flex items-center justify-center gap-2 active:scale-95 transition-all"
+        className="relative z-10 w-full h-14 text-white rounded-2xl font-semibold text-sm tracking-wide flex items-center justify-center gap-2 active:scale-95 transition-all"
         style={{
+          background: 'linear-gradient(135deg, #3b82f6, #f43f5e)',
           opacity: (seleccionado && !cargando) ? 1 : 0.5,
-          boxShadow: seleccionado ? '0 8px 24px rgba(46,58,35,0.25)' : 'none'
+          boxShadow: seleccionado ? '0 0 24px rgba(244,63,94,0.4)' : 'none'
         }}
       >
         {cargando ? 'Guardando...' : (seleccionado ? '✨ Entrar a Munchy' : 'Selecciona tu nivel')}
