@@ -16,7 +16,29 @@ export async function POST(request) {
       // Si no mandan body, usamos el default
     }
 
-    // Crea la sesión anónima en Supabase
+    // ─── PASO CLAVE: ¿ya hay una sesión activa? ───
+    // Si el usuario ya entró antes, NO creamos otra cuenta. Abrimos la suya.
+    const { data: { user: usuarioExistente } } = await supabase.auth.getUser()
+
+    if (usuarioExistente) {
+      // Ya tiene sesión. Revisamos que su fila en 'usuarios' exista (por seguridad).
+      const { data: perfil } = await supabase
+        .from('usuarios')
+        .select('id')
+        .eq('id', usuarioExistente.id)
+        .maybeSingle()
+
+      // Si por alguna razón no tiene fila, la creamos (sin duplicar).
+      if (!perfil) {
+        await supabase
+          .from('usuarios')
+          .insert({ id: usuarioExistente.id, apodo: apodo })
+      }
+
+      return NextResponse.json({ ok: true, apodo: apodo, sesion: 'existente' })
+    }
+
+    // ─── No hay sesión: es un usuario NUEVO de verdad. Creamos cuenta. ───
     const { data, error } = await supabase.auth.signInAnonymously()
 
     if (error) {
@@ -40,7 +62,7 @@ export async function POST(request) {
       )
     }
 
-    return NextResponse.json({ ok: true, apodo: apodo })
+    return NextResponse.json({ ok: true, apodo: apodo, sesion: 'nueva' })
 
   } catch (err) {
     return NextResponse.json(
