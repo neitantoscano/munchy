@@ -22,18 +22,23 @@ export default function PantallaGenerar() {
     { id: 'otro',      label: 'Otro',      sub: 'Tú me dices',          icono: '✨', color: '#f5f4f0', borde: '#75786f' },
   ]
 
-  // Burbujas neón del fondo (CSS puro, decorativas)
+  // Burbujas difuminadas tipo glow (CSS puro, decorativas)
   const burbujas = [
-    { left: '8%',  size: 10, dur: 14, delay: 0,  color: '#4ade80' },
-    { left: '20%', size: 6,  dur: 18, delay: 3,  color: '#a855f7' },
-    { left: '33%', size: 14, dur: 12, delay: 6,  color: '#fb923c' },
-    { left: '45%', size: 8,  dur: 20, delay: 1,  color: '#4ade80' },
-    { left: '57%', size: 5,  dur: 16, delay: 8,  color: '#a855f7' },
-    { left: '68%', size: 12, dur: 13, delay: 4,  color: '#fb923c' },
-    { left: '78%', size: 7,  dur: 19, delay: 10, color: '#4ade80' },
-    { left: '88%', size: 9,  dur: 15, delay: 2,  color: '#a855f7' },
-    { left: '15%', size: 5,  dur: 22, delay: 12, color: '#fb923c' },
-    { left: '62%', size: 11, dur: 17, delay: 7,  color: '#4ade80' },
+    { left: '5%',  size: 22, dur: 15, delay: 0,  color: '#4ade80' },
+    { left: '12%', size: 14, dur: 19, delay: 4,  color: '#a855f7' },
+    { left: '20%', size: 30, dur: 13, delay: 8,  color: '#fb923c' },
+    { left: '27%', size: 18, dur: 21, delay: 2,  color: '#4ade80' },
+    { left: '35%', size: 12, dur: 17, delay: 11, color: '#a855f7' },
+    { left: '43%', size: 26, dur: 14, delay: 6,  color: '#fb923c' },
+    { left: '50%', size: 16, dur: 20, delay: 1,  color: '#4ade80' },
+    { left: '57%', size: 20, dur: 16, delay: 9,  color: '#a855f7' },
+    { left: '64%', size: 28, dur: 12, delay: 5,  color: '#fb923c' },
+    { left: '71%', size: 13, dur: 22, delay: 13, color: '#4ade80' },
+    { left: '78%', size: 24, dur: 18, delay: 3,  color: '#a855f7' },
+    { left: '85%', size: 15, dur: 15, delay: 7,  color: '#fb923c' },
+    { left: '92%', size: 20, dur: 23, delay: 10, color: '#4ade80' },
+    { left: '17%', size: 11, dur: 24, delay: 14, color: '#a855f7' },
+    { left: '68%', size: 32, dur: 19, delay: 12, color: '#fb923c' },
   ]
 
   const mensajesLoading = [
@@ -109,7 +114,7 @@ export default function PantallaGenerar() {
     return (
       <main className="relative min-h-screen bg-black flex flex-col items-center justify-center px-5 py-8 overflow-hidden">
 
-        {/* 🎨 Blobs neón + burbujas (decorativos, no bloquean toques) */}
+        {/* 🎨 Blobs neón + burbujas difuminadas (decorativos, no bloquean toques) */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute -top-20 -left-16 w-64 h-64 rounded-full" style={{ background: '#4ade80', filter: 'blur(100px)', opacity: 0.28 }} />
           <div className="absolute top-1/3 -right-24 w-72 h-72 rounded-full" style={{ background: '#a855f7', filter: 'blur(110px)', opacity: 0.3 }} />
@@ -117,8 +122,8 @@ export default function PantallaGenerar() {
           {burbujas.map((b, i) => (
             <span key={i} className="burbuja" style={{
               left: b.left, width: b.size, height: b.size, background: b.color,
+              filter: `blur(${Math.round(b.size / 3)}px)`,
               animationDuration: `${b.dur}s`, animationDelay: `${b.delay}s`,
-              boxShadow: `0 0 ${b.size}px ${b.color}`
             }} />
           ))}
         </div>
@@ -168,7 +173,7 @@ export default function PantallaGenerar() {
         <style jsx>{`
           .burbuja {
             position: absolute;
-            bottom: -20px;
+            bottom: -40px;
             border-radius: 9999px;
             opacity: 0;
             animation-name: subir;
@@ -177,9 +182,9 @@ export default function PantallaGenerar() {
           }
           @keyframes subir {
             0%   { transform: translateY(0);       opacity: 0; }
-            15%  { opacity: 0.7; }
-            80%  { opacity: 0.4; }
-            100% { transform: translateY(-105vh);  opacity: 0; }
+            15%  { opacity: 0.55; }
+            80%  { opacity: 0.3; }
+            100% { transform: translateY(-110vh);  opacity: 0; }
           }
           @keyframes flotar {
             0%, 100% { transform: translateY(0); }
@@ -201,7 +206,7 @@ export default function PantallaGenerar() {
   return (
     <main className="relative min-h-screen bg-black flex flex-col px-5 py-6 pb-8 overflow-hidden">
 
-      {/* 🎨 Blobs neón + burbujas (decorativos, no bloquean toques) */}
+      {/* 🎨 Blobs neón + burbujas difuminadas (decorativos, no bloquean toques) */}
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
         <div className="absolute -top-20 -left-16 w-64 h-64 rounded-full" style={{ background: '#4ade80', filter: 'blur(100px)', opacity: 0.28 }} />
         <div className="absolute top-1/3 -right-24 w-72 h-72 rounded-full" style={{ background: '#a855f7', filter: 'blur(110px)', opacity: 0.3 }} />
@@ -209,8 +214,8 @@ export default function PantallaGenerar() {
         {burbujas.map((b, i) => (
           <span key={i} className="burbuja" style={{
             left: b.left, width: b.size, height: b.size, background: b.color,
+            filter: `blur(${Math.round(b.size / 3)}px)`,
             animationDuration: `${b.dur}s`, animationDelay: `${b.delay}s`,
-            boxShadow: `0 0 ${b.size}px ${b.color}`
           }} />
         ))}
       </div>
@@ -245,9 +250,11 @@ export default function PantallaGenerar() {
               onClick={() => setSeleccionado(t.id)}
               className="flex flex-col items-start p-4 rounded-2xl text-left transition-all active:scale-98 relative"
               style={{
-                background: activo ? t.color : '#ffffff',
-                border: `${activo ? 2 : 1}px solid ${activo ? t.borde : '#c5c8bd40'}`,
-                boxShadow: activo ? `0 4px 16px ${t.borde}25` : '0 2px 12px rgba(0,0,0,0.04)',
+                background: activo
+                  ? t.color
+                  : 'linear-gradient(160deg, #39415a 0%, #262c3d 55%, #171a24 100%)',
+                border: `${activo ? 2 : 1}px solid ${activo ? t.borde : 'rgba(120,140,190,0.28)'}`,
+                boxShadow: activo ? `0 4px 16px ${t.borde}25` : '0 4px 18px rgba(0,0,0,0.5)',
                 minHeight: '110px',
               }}
             >
@@ -267,8 +274,8 @@ export default function PantallaGenerar() {
                 />
               </div>
 
-              <p className="font-semibold text-sm text-olivoOscuro mb-0.5">{t.label}</p>
-              <p className="text-xs text-olivoOscuro opacity-60 leading-snug">{t.sub}</p>
+              <p className="font-semibold text-sm mb-0.5" style={{ color: activo ? '#19240f' : '#FAF9F5' }}>{t.label}</p>
+              <p className="text-xs leading-snug" style={{ color: activo ? '#19240f' : '#FAF9F5', opacity: 0.6 }}>{t.sub}</p>
 
               {activo && (
                 <div
@@ -285,10 +292,15 @@ export default function PantallaGenerar() {
 
       {seleccionado === 'otro' && (
         <div
-          className="relative z-10 bg-white rounded-2xl p-4 mb-5 border border-olivoClaro/50"
-          style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.04)', animation: 'aparecer 0.3s ease-out' }}
+          className="relative z-10 rounded-2xl p-4 mb-5"
+          style={{
+            background: 'linear-gradient(160deg, #39415a 0%, #262c3d 55%, #171a24 100%)',
+            border: '1px solid rgba(120,140,190,0.28)',
+            boxShadow: '0 4px 18px rgba(0,0,0,0.5)',
+            animation: 'aparecer 0.3s ease-out'
+          }}
         >
-          <label className="text-xs font-bold uppercase tracking-wider text-cafeTierra opacity-70 mb-2 block">
+          <label className="text-xs font-bold uppercase tracking-wider text-salmon mb-2 block">
             Cuéntame qué quieres
           </label>
           <textarea
@@ -298,12 +310,13 @@ export default function PantallaGenerar() {
             }}
             placeholder="Ej: algo con plátano y avena, no muy dulce..."
             rows={3}
-            className="w-full p-3 rounded-xl border border-olivoClaro/50 bg-cremaSuave text-olivoOscuro text-sm resize-none focus:outline-none focus:border-olivo transition-colors"
+            className="w-full p-3 rounded-xl bg-white text-olivoOscuro text-sm resize-none focus:outline-none transition-colors"
+            style={{ border: '1px solid rgba(120,140,190,0.35)' }}
           />
           <div className="flex justify-end mt-2">
             <span
               className="text-xs font-medium"
-              style={{ color: textoLibre.length > 180 ? '#E9967A' : '#19240f99' }}
+              style={{ color: textoLibre.length > 180 ? '#E9967A' : 'rgba(250,249,245,0.6)' }}
             >
               {textoLibre.length}/200
             </span>
@@ -334,7 +347,7 @@ export default function PantallaGenerar() {
       <style jsx>{`
         .burbuja {
           position: absolute;
-          bottom: -20px;
+          bottom: -40px;
           border-radius: 9999px;
           opacity: 0;
           animation-name: subir;
@@ -343,9 +356,9 @@ export default function PantallaGenerar() {
         }
         @keyframes subir {
           0%   { transform: translateY(0);      opacity: 0; }
-          15%  { opacity: 0.7; }
-          80%  { opacity: 0.4; }
-          100% { transform: translateY(-105vh); opacity: 0; }
+          15%  { opacity: 0.55; }
+          80%  { opacity: 0.3; }
+          100% { transform: translateY(-110vh); opacity: 0; }
         }
         @keyframes aparecer {
           from { opacity: 0; transform: translateY(-8px); }
