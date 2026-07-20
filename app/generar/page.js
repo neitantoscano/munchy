@@ -22,7 +22,7 @@ export default function PantallaGenerar() {
     { id: 'otro',      label: 'Otro',      sub: 'Tú me dices',          icono: '✨', color: '#f5f4f0', borde: '#75786f' },
   ]
 
-  // Burbujas difuminadas tipo glow (CSS puro, decorativas)
+  // Burbujas difuminadas del fondo (CSS puro, decorativas)
   const burbujas = [
     { left: '5%',  size: 22, dur: 15, delay: 0,  color: '#4ade80' },
     { left: '12%', size: 14, dur: 19, delay: 4,  color: '#a855f7' },
@@ -39,6 +39,14 @@ export default function PantallaGenerar() {
     { left: '92%', size: 20, dur: 23, delay: 10, color: '#4ade80' },
     { left: '17%', size: 11, dur: 24, delay: 14, color: '#a855f7' },
     { left: '68%', size: 32, dur: 19, delay: 12, color: '#fb923c' },
+  ]
+
+  // Burbujitas dentro de cada tarjeta
+  const burbujasCard = [
+    { left: '12%', size: 14, dur: 7,  delay: 0,   color: '#4ade80' },
+    { left: '38%', size: 20, dur: 9,  delay: 1.5, color: '#a855f7' },
+    { left: '62%', size: 11, dur: 6,  delay: 3,   color: '#fb923c' },
+    { left: '82%', size: 17, dur: 10, delay: 2,   color: '#4ade80' },
   ]
 
   const mensajesLoading = [
@@ -256,10 +264,23 @@ export default function PantallaGenerar() {
                 border: `${activo ? 2 : 1}px solid ${activo ? t.borde : 'rgba(120,140,190,0.28)'}`,
                 boxShadow: activo ? `0 4px 16px ${t.borde}25` : '0 4px 18px rgba(0,0,0,0.5)',
                 minHeight: '110px',
+                overflow: 'hidden',
               }}
             >
+              {!activo && (
+                <span className="pointer-events-none absolute inset-0">
+                  {burbujasCard.map((b, i) => (
+                    <span key={i} className="burbuja-card" style={{
+                      left: b.left, width: b.size, height: b.size, background: b.color,
+                      filter: `blur(${Math.round(b.size / 3)}px)`,
+                      animationDuration: `${b.dur}s`, animationDelay: `${b.delay}s`,
+                    }} />
+                  ))}
+                </span>
+              )}
+
               <div
-                className="w-11 h-11 rounded-xl flex items-center justify-center text-xl mb-2 transition-all"
+                className="relative w-11 h-11 rounded-xl flex items-center justify-center text-xl mb-2 transition-all"
                 style={{ background: activo ? '#ffffff' : t.color, boxShadow: `0 2px 8px ${t.borde}30` }}
               >
                 <img
@@ -274,8 +295,8 @@ export default function PantallaGenerar() {
                 />
               </div>
 
-              <p className="font-semibold text-sm mb-0.5" style={{ color: activo ? '#19240f' : '#FAF9F5' }}>{t.label}</p>
-              <p className="text-xs leading-snug" style={{ color: activo ? '#19240f' : '#FAF9F5', opacity: 0.6 }}>{t.sub}</p>
+              <p className="relative font-semibold text-sm mb-0.5" style={{ color: activo ? '#19240f' : '#FAF9F5' }}>{t.label}</p>
+              <p className="relative text-xs leading-snug" style={{ color: activo ? '#19240f' : '#FAF9F5', opacity: 0.6 }}>{t.sub}</p>
 
               {activo && (
                 <div
@@ -359,6 +380,21 @@ export default function PantallaGenerar() {
           15%  { opacity: 0.55; }
           80%  { opacity: 0.3; }
           100% { transform: translateY(-110vh); opacity: 0; }
+        }
+        .burbuja-card {
+          position: absolute;
+          bottom: -24px;
+          border-radius: 9999px;
+          opacity: 0;
+          animation-name: subir-card;
+          animation-timing-function: linear;
+          animation-iteration-count: infinite;
+        }
+        @keyframes subir-card {
+          0%   { transform: translateY(0);      opacity: 0; }
+          20%  { opacity: 0.45; }
+          75%  { opacity: 0.25; }
+          100% { transform: translateY(-150px); opacity: 0; }
         }
         @keyframes aparecer {
           from { opacity: 0; transform: translateY(-8px); }
