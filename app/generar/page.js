@@ -22,6 +22,20 @@ export default function PantallaGenerar() {
     { id: 'otro',      label: 'Otro',      sub: 'Tú me dices',          icono: '✨', color: '#f5f4f0', borde: '#75786f' },
   ]
 
+  // Burbujas neón del fondo (CSS puro, decorativas)
+  const burbujas = [
+    { left: '8%',  size: 10, dur: 14, delay: 0,  color: '#4ade80' },
+    { left: '20%', size: 6,  dur: 18, delay: 3,  color: '#a855f7' },
+    { left: '33%', size: 14, dur: 12, delay: 6,  color: '#fb923c' },
+    { left: '45%', size: 8,  dur: 20, delay: 1,  color: '#4ade80' },
+    { left: '57%', size: 5,  dur: 16, delay: 8,  color: '#a855f7' },
+    { left: '68%', size: 12, dur: 13, delay: 4,  color: '#fb923c' },
+    { left: '78%', size: 7,  dur: 19, delay: 10, color: '#4ade80' },
+    { left: '88%', size: 9,  dur: 15, delay: 2,  color: '#a855f7' },
+    { left: '15%', size: 5,  dur: 22, delay: 12, color: '#fb923c' },
+    { left: '62%', size: 11, dur: 17, delay: 7,  color: '#4ade80' },
+  ]
+
   const mensajesLoading = [
     'Munchie está revisando tu despensa... 🔍',
     'Calculando los mejores ingredientes... 🧮',
@@ -93,9 +107,24 @@ export default function PantallaGenerar() {
 
   if (cargando) {
     return (
-      <main className="min-h-screen bg-crema flex flex-col items-center justify-center px-5 py-8">
-        <div className="w-24 h-24 rounded-3xl bg-olivo flex items-center justify-center mb-6 relative"
-             style={{ animation: 'flotar 2.5s ease-in-out infinite', boxShadow: '0 12px 32px rgba(46,58,35,0.3)' }}>
+      <main className="relative min-h-screen bg-black flex flex-col items-center justify-center px-5 py-8 overflow-hidden">
+
+        {/* 🎨 Blobs neón + burbujas (decorativos, no bloquean toques) */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-20 -left-16 w-64 h-64 rounded-full" style={{ background: '#4ade80', filter: 'blur(100px)', opacity: 0.28 }} />
+          <div className="absolute top-1/3 -right-24 w-72 h-72 rounded-full" style={{ background: '#a855f7', filter: 'blur(110px)', opacity: 0.3 }} />
+          <div className="absolute bottom-10 -left-20 w-64 h-64 rounded-full" style={{ background: '#fb923c', filter: 'blur(100px)', opacity: 0.25 }} />
+          {burbujas.map((b, i) => (
+            <span key={i} className="burbuja" style={{
+              left: b.left, width: b.size, height: b.size, background: b.color,
+              animationDuration: `${b.dur}s`, animationDelay: `${b.delay}s`,
+              boxShadow: `0 0 ${b.size}px ${b.color}`
+            }} />
+          ))}
+        </div>
+
+        <div className="relative z-10 w-24 h-24 rounded-3xl bg-olivo flex items-center justify-center mb-6"
+             style={{ animation: 'flotar 2.5s ease-in-out infinite', boxShadow: '0 0 26px rgba(74,222,128,0.35)', border: '1px solid rgba(255,255,255,0.12)' }}>
           <img
             src="/icons/munchie-cocinando.png"
             alt="Munchie"
@@ -106,27 +135,28 @@ export default function PantallaGenerar() {
               e.currentTarget.parentElement.innerHTML = '<span style="font-size:54px">👨‍🍳</span>'
             }}
           />
-          <div className="absolute -bottom-2 -right-2 w-7 h-7 rounded-full bg-salmon flex items-center justify-center text-sm border-2 border-crema">
+          <div className="absolute -bottom-2 -right-2 w-7 h-7 rounded-full bg-salmon flex items-center justify-center text-sm border-2 border-black">
             ✨
           </div>
         </div>
 
-        <h1 className="font-serif text-2xl text-olivoOscuro text-center mb-3 leading-tight">
+        <h1 className="relative z-10 font-serif text-2xl text-crema text-center mb-3 leading-tight">
           Creando tu receta...
         </h1>
 
-        <p className="text-sm text-olivoOscuro opacity-70 text-center max-w-xs leading-relaxed min-h-[40px]"
+        <p className="relative z-10 text-sm text-crema opacity-70 text-center max-w-xs leading-relaxed min-h-[40px]"
            style={{ animation: 'fadeIn 0.5s' }}
            key={mensajeIdx}>
           {mensajesLoading[mensajeIdx]}
         </p>
 
-        <div className="flex gap-2 mt-8">
+        <div className="relative z-10 flex gap-2 mt-8">
           {[0, 1, 2].map(i => (
             <div
               key={i}
-              className="w-2 h-2 rounded-full bg-olivo"
+              className="w-2 h-2 rounded-full"
               style={{
+                background: '#4ade80',
                 animation: 'pulso 1.2s ease-in-out infinite',
                 animationDelay: `${i * 0.2}s`,
                 opacity: 0.3,
@@ -136,6 +166,21 @@ export default function PantallaGenerar() {
         </div>
 
         <style jsx>{`
+          .burbuja {
+            position: absolute;
+            bottom: -20px;
+            border-radius: 9999px;
+            opacity: 0;
+            animation-name: subir;
+            animation-timing-function: linear;
+            animation-iteration-count: infinite;
+          }
+          @keyframes subir {
+            0%   { transform: translateY(0);       opacity: 0; }
+            15%  { opacity: 0.7; }
+            80%  { opacity: 0.4; }
+            100% { transform: translateY(-105vh);  opacity: 0; }
+          }
           @keyframes flotar {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-6px); }
@@ -154,29 +199,44 @@ export default function PantallaGenerar() {
   }
 
   return (
-    <main className="min-h-screen bg-crema flex flex-col px-5 py-6 pb-8">
-      <div className="flex items-center justify-between pb-4">
+    <main className="relative min-h-screen bg-black flex flex-col px-5 py-6 pb-8 overflow-hidden">
+
+      {/* 🎨 Blobs neón + burbujas (decorativos, no bloquean toques) */}
+      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        <div className="absolute -top-20 -left-16 w-64 h-64 rounded-full" style={{ background: '#4ade80', filter: 'blur(100px)', opacity: 0.28 }} />
+        <div className="absolute top-1/3 -right-24 w-72 h-72 rounded-full" style={{ background: '#a855f7', filter: 'blur(110px)', opacity: 0.3 }} />
+        <div className="absolute bottom-10 -left-20 w-64 h-64 rounded-full" style={{ background: '#fb923c', filter: 'blur(100px)', opacity: 0.25 }} />
+        {burbujas.map((b, i) => (
+          <span key={i} className="burbuja" style={{
+            left: b.left, width: b.size, height: b.size, background: b.color,
+            animationDuration: `${b.dur}s`, animationDelay: `${b.delay}s`,
+            boxShadow: `0 0 ${b.size}px ${b.color}`
+          }} />
+        ))}
+      </div>
+
+      <div className="relative z-10 flex items-center justify-between pb-4">
         <button
           onClick={() => router.back()}
           className="w-10 h-10 rounded-full bg-white border border-olivoClaro flex items-center justify-center text-olivo active:scale-95 transition-transform"
         >←</button>
-        <span className="font-serif text-lg text-olivo">Munchy</span>
+        <span className="font-serif text-lg text-crema">Munchy</span>
         <div className="w-10" />
       </div>
 
-      <div className="mb-6">
-        <p className="text-xs font-bold uppercase tracking-wider text-cafeTierra opacity-70 mb-2">
+      <div className="relative z-10 mb-6">
+        <p className="text-xs font-bold uppercase tracking-wider text-salmon mb-2">
           Generar receta
         </p>
-        <h1 className="font-serif text-3xl text-olivoOscuro leading-tight mb-2">
+        <h1 className="font-serif text-3xl text-crema leading-tight mb-2">
           ¿Qué se te antoja?
         </h1>
-        <p className="text-sm text-olivoOscuro opacity-70 leading-relaxed">
+        <p className="text-sm text-crema opacity-70 leading-relaxed">
           Munchie te creará algo único basado en tu despensa y perfil.
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 mb-5">
+      <div className="relative z-10 grid grid-cols-2 gap-3 mb-5">
         {tipos.map(t => {
           const activo = seleccionado === t.id
           return (
@@ -225,7 +285,7 @@ export default function PantallaGenerar() {
 
       {seleccionado === 'otro' && (
         <div
-          className="bg-white rounded-2xl p-4 mb-5 border border-olivoClaro/50"
+          className="relative z-10 bg-white rounded-2xl p-4 mb-5 border border-olivoClaro/50"
           style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.04)', animation: 'aparecer 0.3s ease-out' }}
         >
           <label className="text-xs font-bold uppercase tracking-wider text-cafeTierra opacity-70 mb-2 block">
@@ -254,16 +314,17 @@ export default function PantallaGenerar() {
       <div className="flex-1" />
 
       {error && (
-        <p className="text-xs text-salmon font-medium text-center mb-2">{error}</p>
+        <p className="relative z-10 text-xs text-salmon font-medium text-center mb-2">{error}</p>
       )}
 
       <button
         onClick={handleGenerar}
         disabled={!puedeGenerar}
-        className="w-full h-14 bg-olivo text-white rounded-2xl font-semibold text-sm tracking-wide flex items-center justify-center gap-2 active:scale-95 transition-all"
+        className="relative z-10 w-full h-14 bg-olivo text-white rounded-2xl font-semibold text-sm tracking-wide flex items-center justify-center gap-2 active:scale-95 transition-all"
         style={{
           opacity: puedeGenerar ? 1 : 0.5,
-          boxShadow: puedeGenerar ? '0 8px 24px rgba(46,58,35,0.25)' : 'none',
+          boxShadow: puedeGenerar ? '0 0 24px rgba(74,222,128,0.35)' : 'none',
+          border: '1px solid rgba(255,255,255,0.14)',
         }}
       >
         {puedeGenerar ? '✨ Generar receta' : 'Selecciona un tipo'}
@@ -271,6 +332,21 @@ export default function PantallaGenerar() {
       </button>
 
       <style jsx>{`
+        .burbuja {
+          position: absolute;
+          bottom: -20px;
+          border-radius: 9999px;
+          opacity: 0;
+          animation-name: subir;
+          animation-timing-function: linear;
+          animation-iteration-count: infinite;
+        }
+        @keyframes subir {
+          0%   { transform: translateY(0);      opacity: 0; }
+          15%  { opacity: 0.7; }
+          80%  { opacity: 0.4; }
+          100% { transform: translateY(-105vh); opacity: 0; }
+        }
         @keyframes aparecer {
           from { opacity: 0; transform: translateY(-8px); }
           to   { opacity: 1; transform: translateY(0); }
