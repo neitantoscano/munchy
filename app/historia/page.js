@@ -15,23 +15,22 @@ export default function PantallaHistoria() {
     { left: '90%', size: 20, dur: 20, delay: 3,  color: '#4ade80' },
   ]
 
-  // ✏️ CAMBIAR: aquí va tu historia real
   const bloques = [
     {
-      titulo: '¿Qué es Munchy?',
-      texto: 'Munchy nació para resolver algo simple: saber qué cocinar con lo que ya tienes en casa, sin gastar de más y sin comer mal.',
-    },
-    {
       titulo: '¿Quién la creó?',
-      texto: 'Munchy fue creada por POLO, desarrollador y diseñador web mexicano. ✏️ CAMBIAR: cuenta aquí tu historia, de dónde eres y cómo empezaste.',
+      texto: 'Munchy fue creada por un estudiante mexicano de informática de 16 años, del municipio de Ometepec, Guerrero.',
     },
     {
       titulo: '¿Por qué existe?',
-      texto: '✏️ CAMBIAR: explica el motivo real. Ej: porque comer saludable en México se siente caro y complicado, y no tiene por qué serlo.',
+      texto: 'Empezó por curiosidad, haciendo una web para una tienda. En el camino descubrí que resolvía algo real: qué cocinar con lo que ya tienes en casa. Porque comer saludable no es comer pura ensalada de verdura: es combinar alimentos que además sepan ricos, sin llenarte de procesados. Así nació Munchy, buscando los mejores ingredientes a un precio de suscripción accesible.',
     },
     {
       titulo: 'Lo que viene',
-      texto: '✏️ CAMBIAR: menciona tus próximas apps o funciones planeadas.',
+      texto: 'Una app para emprendedores latinos que los conecte con proveedores de confianza, para crear marcas o comprar a mayoreo con buena calidad y precio, sin estafas ni presión de compra.',
+    },
+    {
+      titulo: 'Ayúdame a que crezca 🚀',
+      texto: 'Munchy va en el nivel 1 de 4 y sigue en aprobación del público. Con tu apoyo llegan más colaboraciones y más dinámicas chidas dentro de la app.',
     },
   ]
 
