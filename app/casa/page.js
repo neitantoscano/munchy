@@ -117,9 +117,20 @@ export default function PantallaCasa() {
           <span className="font-serif text-xl text-crema">Munchy</span>
         </div>
 
-        <div className="flex items-center gap-1.5 bg-ambarFixed rounded-full px-3 py-1.5 border border-ambar/30">
-          <span className="text-base">🔥</span>
-          <span className="text-xs font-bold text-ambar">{datos.racha_dias} {datos.racha_dias === 1 ? 'día' : 'días'}</span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => router.push('/historia')}
+            className="flex items-center gap-1 rounded-full px-3 py-1.5 active:scale-95 transition-transform"
+            style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.18)' }}
+          >
+            <span className="text-sm">📖</span>
+            <span className="text-xs font-bold text-crema">Historia</span>
+          </button>
+
+          <div className="flex items-center gap-1.5 bg-ambarFixed rounded-full px-3 py-1.5 border border-ambar/30">
+            <span className="text-base">🔥</span>
+            <span className="text-xs font-bold text-ambar">{datos.racha_dias} {datos.racha_dias === 1 ? 'día' : 'días'}</span>
+          </div>
         </div>
       </div>
 
