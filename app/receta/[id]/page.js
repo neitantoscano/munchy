@@ -12,6 +12,22 @@ export default function PantallaReceta({ params }) {
   const [confetti, setConfetti] = useState(false)
   const [rachaNueva, setRachaNueva] = useState(null)
 
+  // Burbujas difuminadas del fondo (CSS puro, decorativas)
+  const burbujas = [
+    { left: '5%',  size: 22, dur: 15, delay: 0,  color: '#4ade80' },
+    { left: '14%', size: 14, dur: 19, delay: 4,  color: '#a855f7' },
+    { left: '24%', size: 30, dur: 13, delay: 8,  color: '#fb923c' },
+    { left: '33%', size: 18, dur: 21, delay: 2,  color: '#4ade80' },
+    { left: '42%', size: 12, dur: 17, delay: 11, color: '#a855f7' },
+    { left: '51%', size: 26, dur: 14, delay: 6,  color: '#fb923c' },
+    { left: '60%', size: 16, dur: 20, delay: 1,  color: '#4ade80' },
+    { left: '69%', size: 20, dur: 16, delay: 9,  color: '#a855f7' },
+    { left: '78%', size: 28, dur: 12, delay: 5,  color: '#fb923c' },
+    { left: '87%', size: 13, dur: 22, delay: 13, color: '#4ade80' },
+    { left: '94%', size: 24, dur: 18, delay: 3,  color: '#a855f7' },
+    { left: '19%', size: 15, dur: 23, delay: 7,  color: '#fb923c' },
+  ]
+
   const cargarReceta = async () => {
     try {
       // 🔌 BACKEND: lee la receta real
@@ -80,13 +96,13 @@ export default function PantallaReceta({ params }) {
 
   if (error) {
     return (
-      <main className="min-h-screen bg-crema flex flex-col items-center justify-center px-5">
+      <main className="min-h-screen bg-black flex flex-col items-center justify-center px-5">
         <p className="text-sm text-salmon font-medium text-center mb-4">{error}</p>
         <div className="flex gap-2">
           <button onClick={() => { setError(''); cargarReceta() }} className="h-11 px-6 bg-olivo text-white rounded-xl text-sm font-semibold">
             Reintentar
           </button>
-          <button onClick={() => router.push('/casa')} className="h-11 px-6 border border-olivoClaro text-olivoOscuro rounded-xl text-sm font-semibold">
+          <button onClick={() => router.push('/casa')} className="h-11 px-6 border border-olivoClaro text-crema rounded-xl text-sm font-semibold">
             Ir a casa
           </button>
         </div>
@@ -96,11 +112,11 @@ export default function PantallaReceta({ params }) {
 
   if (!receta) {
     return (
-      <main className="min-h-screen bg-crema flex items-center justify-center">
+      <main className="min-h-screen bg-black flex items-center justify-center">
         <div className="flex gap-2">
           {[0,1,2].map(i => (
-            <div key={i} className="w-2.5 h-2.5 rounded-full bg-olivo"
-                 style={{ animation: 'pulso 1.2s ease-in-out infinite', animationDelay: `${i*0.2}s`, opacity: 0.3 }} />
+            <div key={i} className="w-2.5 h-2.5 rounded-full"
+                 style={{ background: '#4ade80', animation: 'pulso 1.2s ease-in-out infinite', animationDelay: `${i*0.2}s`, opacity: 0.3 }} />
           ))}
         </div>
         <style jsx>{`@keyframes pulso { 0%,100% { opacity:0.3; transform:scale(1) } 50% { opacity:1; transform:scale(1.3) } }`}</style>
@@ -110,7 +126,7 @@ export default function PantallaReceta({ params }) {
 
   if (confetti) {
     return (
-      <main className="min-h-screen bg-crema flex flex-col items-center justify-center px-5 py-8 relative overflow-hidden">
+      <main className="min-h-screen bg-black flex flex-col items-center justify-center px-5 py-8 relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
           {[...Array(20)].map((_, i) => (
             <span key={i} className="absolute text-2xl"
@@ -125,17 +141,17 @@ export default function PantallaReceta({ params }) {
         </div>
 
         <div className="text-7xl mb-4">🔥</div>
-        <h1 className="font-serif text-3xl text-olivoOscuro text-center mb-2">
+        <h1 className="font-serif text-3xl text-crema text-center mb-2">
           {rachaNueva ? `¡${rachaNueva} días seguidos!` : '¡Receta cocinada!'}
         </h1>
-        <p className="text-base text-olivoOscuro opacity-70 text-center max-w-xs mb-8">
+        <p className="text-base text-crema opacity-70 text-center max-w-xs mb-8">
           La despensa se actualizó y tu racha sigue viva, <span className="font-semibold">campeón</span>.
         </p>
 
         <button
           onClick={() => router.push('/casa')}
           className="w-full max-w-xs h-14 bg-olivo text-white rounded-2xl font-semibold text-sm tracking-wide active:scale-95 transition-all"
-          style={{ boxShadow: '0 8px 24px rgba(46,58,35,0.25)' }}
+          style={{ boxShadow: '0 0 24px rgba(74,222,128,0.35)', border: '1px solid rgba(255,255,255,0.14)' }}
         >
           Volver a casa →
         </button>
@@ -151,49 +167,59 @@ export default function PantallaReceta({ params }) {
   }
 
   return (
-    <main className="min-h-screen bg-crema pb-32">
-      <div className="relative w-full aspect-[16/9] overflow-hidden"
-           style={{ background: 'linear-gradient(135deg, #2e3a23, #8f4c35, #E9967A)' }}>
-        {receta.imagen_url ? (
-          <img src={receta.imagen_url} alt={receta.titulo} className="w-full h-full object-cover" />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-7xl">
-            {receta.emoji}
-          </div>
-        )}
+    <main className="relative min-h-screen bg-black pb-32 overflow-hidden">
 
-        <button
-          onClick={() => router.back()}
-          className="absolute top-4 left-4 w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-olivo active:scale-95 transition-transform"
-          style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}
-        >←</button>
-
-        <div className="absolute top-4 right-4">
-          <span className="inline-block px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-white/90 backdrop-blur-sm"
-                style={{ color: receta.estilo === 'moderna' ? '#E9967A' : '#3d7a3d' }}>
-            {receta.estilo === 'moderna' ? '✨ Moderna' : '🌿 Clásica'}
-          </span>
-        </div>
+      {/* 🎨 Blobs neón + burbujas difuminadas (decorativos, no bloquean toques) */}
+      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        <div className="absolute -top-20 -left-16 w-64 h-64 rounded-full" style={{ background: '#4ade80', filter: 'blur(100px)', opacity: 0.26 }} />
+        <div className="absolute top-1/3 -right-24 w-72 h-72 rounded-full" style={{ background: '#a855f7', filter: 'blur(110px)', opacity: 0.28 }} />
+        <div className="absolute bottom-10 -left-20 w-64 h-64 rounded-full" style={{ background: '#fb923c', filter: 'blur(100px)', opacity: 0.24 }} />
+        {burbujas.map((b, i) => (
+          <span key={i} className="burbuja" style={{
+            left: b.left, width: b.size, height: b.size, background: b.color,
+            filter: `blur(${Math.round(b.size / 3)}px)`,
+            animationDuration: `${b.dur}s`, animationDelay: `${b.delay}s`,
+          }} />
+        ))}
       </div>
 
-      <div className="px-5 pt-6">
-        <h1 className="font-serif text-3xl text-olivoOscuro leading-tight mb-2">
+      <div className="relative z-20 px-5 pt-5 pb-2 flex items-center justify-between sticky top-0"
+           style={{ background: 'rgba(10,10,10,0.7)', backdropFilter: 'blur(14px)' }}>
+        <button
+          onClick={() => router.back()}
+          className="w-10 h-10 rounded-full bg-white border border-olivoClaro flex items-center justify-center text-olivo active:scale-95 transition-transform"
+        >←</button>
+
+        <span className="inline-block px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider"
+              style={{
+                background: 'rgba(255,255,255,0.08)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                color: receta.estilo === 'moderna' ? '#E9967A' : '#8fd18f'
+              }}>
+          {receta.estilo === 'moderna' ? '✨ Moderna' : '🌿 Clásica'}
+        </span>
+      </div>
+
+      <div className="relative z-10 px-5 pt-6">
+        <h1 className="font-serif text-4xl text-crema leading-tight mb-3">
           {receta.titulo}
         </h1>
-        <p className="text-sm text-olivoOscuro opacity-70 leading-relaxed mb-4">
+        <p className="text-sm text-crema opacity-70 leading-relaxed mb-5">
           {receta.descripcion}
         </p>
 
-        <div className="flex gap-4 mb-6 text-sm text-olivoOscuro">
-          <div className="flex items-center gap-1.5">
-            <span>⏱️</span>
-            <span className="font-semibold">{receta.tiempo_minutos} min</span>
-          </div>
-          <div className="w-px bg-olivoClaro" />
-          <div className="flex items-center gap-1.5">
-            <span>🍽️</span>
-            <span className="font-semibold">{receta.porciones} porciones</span>
-          </div>
+        <div className="flex flex-wrap gap-2 mb-7">
+          {[
+            `⏱️ ${receta.tiempo_minutos} min`,
+            `🍽️ ${receta.porciones} porciones`,
+            `🔥 ${receta.macros.calorias} kcal`,
+          ].map(chip => (
+            <span key={chip}
+                  className="px-3 py-1.5 rounded-full text-xs font-semibold text-crema"
+                  style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.14)' }}>
+              {chip}
+            </span>
+          ))}
         </div>
 
         <section className="bg-white rounded-2xl p-4 mb-6 border border-olivoClaro/30"
@@ -229,7 +255,7 @@ export default function PantallaReceta({ params }) {
         </section>
 
         <section className="mb-6">
-          <h2 className="font-serif text-xl text-olivoOscuro mb-3">Ingredientes</h2>
+          <h2 className="font-serif text-xl text-crema mb-3">Ingredientes</h2>
           <div className="bg-white rounded-2xl p-4 border border-olivoClaro/30"
                style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
             {receta.ingredientes.map((ing, i) => (
@@ -272,7 +298,7 @@ export default function PantallaReceta({ params }) {
         )}
 
         <section className="mb-6">
-          <h2 className="font-serif text-xl text-olivoOscuro mb-3">Instrucciones</h2>
+          <h2 className="font-serif text-xl text-crema mb-3">Instrucciones</h2>
           <div className="space-y-3">
             {receta.instrucciones.map((paso, i) => (
               <div key={i} className="flex gap-3 bg-white rounded-2xl p-4 border border-olivoClaro/30"
@@ -288,7 +314,7 @@ export default function PantallaReceta({ params }) {
       </div>
 
       <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md px-5 pb-4 pt-3 z-50"
-           style={{ background: 'linear-gradient(to top, rgba(250,249,245,1) 70%, rgba(250,249,245,0))' }}>
+           style={{ background: 'linear-gradient(to top, rgba(0,0,0,1) 70%, rgba(0,0,0,0))' }}>
         <div className="flex gap-3">
           <button
             onClick={toggleGuardar}
@@ -307,7 +333,8 @@ export default function PantallaReceta({ params }) {
             disabled={cocinando}
             className="flex-1 h-14 bg-olivo text-white rounded-2xl font-semibold text-sm tracking-wide flex items-center justify-center gap-2 active:scale-95 transition-all"
             style={{
-              boxShadow: '0 8px 24px rgba(46,58,35,0.25)',
+              boxShadow: '0 0 24px rgba(74,222,128,0.35)',
+              border: '1px solid rgba(255,255,255,0.14)',
               opacity: cocinando ? 0.7 : 1,
             }}
           >
@@ -315,6 +342,24 @@ export default function PantallaReceta({ params }) {
           </button>
         </div>
       </div>
+
+      <style jsx>{`
+        .burbuja {
+          position: absolute;
+          bottom: -40px;
+          border-radius: 9999px;
+          opacity: 0;
+          animation-name: subir;
+          animation-timing-function: linear;
+          animation-iteration-count: infinite;
+        }
+        @keyframes subir {
+          0%   { transform: translateY(0);      opacity: 0; }
+          15%  { opacity: 0.55; }
+          80%  { opacity: 0.3; }
+          100% { transform: translateY(-110vh); opacity: 0; }
+        }
+      `}</style>
     </main>
   )
 }
