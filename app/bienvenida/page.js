@@ -1,51 +1,37 @@
 'use client'
 
-import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 export default function PantallaBienvenida() {
   const router = useRouter()
-  const [apodo, setApodo] = useState('')
-  const [cargando, setCargando] = useState(false)
-  const [error, setError] = useState('')
 
-  const handleEmpezar = async () => {
-    setCargando(true)
-    setError('')
-
-    try {
-      // 🔌 BACKEND: Crea la sesión anónima en Supabase
-      const res = await fetch('/api/auth/anonimo', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ apodo: apodo.trim() }),
-      })
-
-      const data = await res.json()
-
-      if (data.ok) {
-        router.push('/oficio')
-      } else {
-        setError('Algo salió mal. Intenta de nuevo.')
-        setCargando(false)
-      }
-    } catch (e) {
-      setError('Sin conexión. Revisa tu internet.')
-      setCargando(false)
-    }
-  }
+  const burbujas = [
+    { left: '8%',  size: 22, dur: 15, delay: 0,  color: '#4ade80' },
+    { left: '25%', size: 14, dur: 19, delay: 4,  color: '#a855f7' },
+    { left: '42%', size: 28, dur: 13, delay: 8,  color: '#fb923c' },
+    { left: '58%', size: 16, dur: 21, delay: 2,  color: '#4ade80' },
+    { left: '74%', size: 24, dur: 17, delay: 11, color: '#a855f7' },
+    { left: '90%', size: 13, dur: 14, delay: 6,  color: '#fb923c' },
+  ]
 
   return (
     <main className="relative min-h-screen bg-black flex flex-col px-5 py-8 overflow-hidden">
 
-      {/* 🎨 Fondos neón (decorativos, no bloquean toques) */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      {/* 🎨 Blobs neón + burbujas (decorativos, no bloquean toques) */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-24 -left-20 w-72 h-72 rounded-full"
              style={{ background: '#4ade80', filter: 'blur(100px)', opacity: 0.35 }} />
         <div className="absolute top-1/4 -right-24 w-80 h-80 rounded-full"
              style={{ background: '#a855f7', filter: 'blur(110px)', opacity: 0.4 }} />
         <div className="absolute bottom-1/4 -left-16 w-64 h-64 rounded-full"
              style={{ background: '#fb923c', filter: 'blur(100px)', opacity: 0.3 }} />
+        {burbujas.map((b, i) => (
+          <span key={i} className="burbuja" style={{
+            left: b.left, width: b.size, height: b.size, background: b.color,
+            filter: `blur(${Math.round(b.size / 3)}px)`,
+            animationDuration: `${b.dur}s`, animationDelay: `${b.delay}s`,
+          }} />
+        ))}
       </div>
 
       <div className="relative z-10 flex justify-center pt-4 pb-2">
@@ -79,39 +65,67 @@ export default function PantallaBienvenida() {
           <em className="text-white">prime</em>
         </h1>
 
-        <p className="text-base text-crema opacity-70 mb-8 max-w-xs leading-relaxed">
-          Antojos saludables, hechos para ti. ¿Cómo te llamamos?
+        <p className="text-base text-crema opacity-70 max-w-xs leading-relaxed">
+          Recetas saludables hechas con lo que ya tienes en casa.
         </p>
-
-        <div className="w-full max-w-xs mb-2">
-          <input
-            type="text"
-            value={apodo}
-            onChange={(e) => setApodo(e.target.value)}
-            placeholder="Tu apodo o nombre"
-            maxLength={20}
-            className="w-full px-5 py-4 rounded-2xl border border-olivoClaro bg-white text-olivoOscuro text-center text-base font-medium focus:outline-none focus:border-olivo transition-colors"
-          />
-        </div>
-        <p className="text-xs text-crema opacity-50 mb-2">
-          Puedes cambiarlo después
-        </p>
-
-        {error && (
-          <p className="text-xs text-salmon font-medium mb-2">{error}</p>
-        )}
       </div>
 
-      <button
-        onClick={handleEmpezar}
-        disabled={cargando}
-        className="relative z-10 w-full h-14 bg-olivo text-white rounded-2xl font-semibold text-sm tracking-wide flex items-center justify-center gap-2 active:scale-95 transition-transform"
-        style={{ boxShadow: '0 8px 24px rgba(46,58,35,0.25)', opacity: cargando ? 0.7 : 1 }}
-      >
-        {cargando ? 'Creando tu cuenta...' : 'Empezar'}
-        {!cargando && <span>→</span>}
-      </button>
+      <div className="relative z-10">
+        <div className="borde-vivo">
+          <button
+            onClick={() => router.push('/registro')}
+            className="w-full h-14 bg-olivo text-white rounded-2xl font-semibold text-sm tracking-wide flex items-center justify-center gap-2 active:scale-95 transition-transform relative z-10"
+          >
+            Empezar
+            <span>→</span>
+          </button>
+        </div>
 
+        <button
+          onClick={() => router.push('/login')}
+          className="w-full text-sm text-crema opacity-70 underline py-4 mt-2"
+        >
+          Ya tengo cuenta, iniciar sesión
+        </button>
+      </div>
+
+      <style jsx>{`
+        .burbuja {
+          position: absolute;
+          bottom: -40px;
+          border-radius: 9999px;
+          opacity: 0;
+          animation-name: subir;
+          animation-timing-function: linear;
+          animation-iteration-count: infinite;
+        }
+        @keyframes subir {
+          0%   { transform: translateY(0);      opacity: 0; }
+          15%  { opacity: 0.55; }
+          80%  { opacity: 0.3; }
+          100% { transform: translateY(-110vh); opacity: 0; }
+        }
+        .borde-vivo {
+          position: relative;
+          border-radius: 1rem;
+          padding: 2px;
+          overflow: hidden;
+        }
+        .borde-vivo::before {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 250%;
+          aspect-ratio: 1;
+          transform: translate(-50%, -50%);
+          background: conic-gradient(from 0deg, transparent 0deg, transparent 250deg, #4ade80 300deg, #a855f7 340deg, transparent 360deg);
+          animation: girar 3s linear infinite;
+        }
+        @keyframes girar {
+          to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+      `}</style>
     </main>
   )
 }
