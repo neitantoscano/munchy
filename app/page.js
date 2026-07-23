@@ -15,8 +15,7 @@ export default function PortadaMunchy() {
 
         if (!data.tiene_sesion) { router.replace('/bienvenida'); return }
         if (!data.tiene_oficio) { router.replace('/oficio'); return }
-        if (!data.tiene_alergias) { router.replace('/alergias'); return }
-        if (!data.tiene_ejercicio) { router.replace('/ejercicio'); return }
+        if (!data.tiene_nivel_ejercicio) { router.replace('/ejercicio'); return }
         if (!data.tiene_apodo) { router.replace('/apodo'); return }
 
         router.replace('/casa')
