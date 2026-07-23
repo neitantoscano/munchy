@@ -1,8 +1,10 @@
 import { createServerSupabase } from '@/lib/supabase-server'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
 
 // Crea una cuenta nueva con correo + contraseña.
-// Deja la sesión iniciada y crea la fila en 'usuarios'.
+// La fila en 'usuarios' se escribe con el cliente admin, porque al momento
+// del registro todavía no hay sesión activa y RLS bloquearía el insert.
 export async function POST(request) {
   try {
     const supabase = await createServerSupabase()
@@ -34,14 +36,12 @@ export async function POST(request) {
       )
     }
 
-    // Crea la cuenta en Supabase Auth
     const { data, error } = await supabase.auth.signUp({
       email: correo,
       password: contrasena,
     })
 
     if (error) {
-      // Correo ya registrado u otro fallo de Supabase
       return NextResponse.json(
         { ok: false, error: 'registro_fallo', mensaje: error.message },
         { status: 400 }
@@ -57,10 +57,10 @@ export async function POST(request) {
 
     const userId = data.user.id
 
-    // Crea la fila del usuario. El apodo se pide al final del cuestionario.
-    const { error: errorPerfil } = await supabase
+    // Se usa el cliente ADMIN para saltar RLS: aún no hay sesión activa.
+    const { error: errorPerfil } = await supabaseAdmin
       .from('usuarios')
-      .insert({ id: userId, correo: correo })
+      .upsert({ id: userId, correo: correo }, { onConflict: 'id' })
 
     if (errorPerfil) {
       return NextResponse.json(
