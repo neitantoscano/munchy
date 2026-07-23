@@ -1,5 +1,5 @@
 import { createServerSupabase } from '@/lib/supabase-server'
-import { supabaseAdmin } from '@/lib/supabase-admin'
+import { createAdminSupabase } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
 
 // Crea una cuenta nueva con correo + contraseña.
@@ -57,8 +57,10 @@ export async function POST(request) {
 
     const userId = data.user.id
 
-    // Se usa el cliente ADMIN para saltar RLS: aún no hay sesión activa.
-    const { error: errorPerfil } = await supabaseAdmin
+    // Cliente ADMIN para saltar RLS: aún no hay sesión activa al registrarse.
+    const admin = createAdminSupabase()
+
+    const { error: errorPerfil } = await admin
       .from('usuarios')
       .upsert({ id: userId, correo: correo }, { onConflict: 'id' })
 
