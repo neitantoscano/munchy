@@ -32,7 +32,7 @@ export default function PantallaEjercicio() {
       const data = await res.json()
 
       if (data.ok) {
-        router.push('/casa')
+        router.push('/apodo')
       } else {
         setError('Algo salió mal. Intenta de nuevo.')
         setCargando(false)
@@ -66,10 +66,11 @@ export default function PantallaEjercicio() {
         <div className="flex-1 h-1 rounded-full" style={{ background: '#3b82f6', boxShadow: '0 0 8px #3b82f6' }}></div>
         <div className="flex-1 h-1 rounded-full" style={{ background: '#3b82f6', boxShadow: '0 0 8px #3b82f6' }}></div>
         <div className="flex-1 h-1 rounded-full" style={{ background: '#3b82f6', boxShadow: '0 0 8px #3b82f6' }}></div>
+        <div className="flex-1 h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.15)' }}></div>
       </div>
 
       <div className="relative z-10 mb-8">
-        <p className="text-xs font-bold uppercase tracking-wider text-salmon mb-2">Paso 3 de 3 — ¡Último!</p>
+        <p className="text-xs font-bold uppercase tracking-wider text-salmon mb-2">Paso 3 de 4</p>
         <h1 className="font-serif text-3xl text-crema leading-tight mb-2">¿Te mueves?</h1>
         <p className="text-base text-crema opacity-70 leading-relaxed">Ajustamos las recetas a tu nivel de actividad.</p>
       </div>
@@ -135,7 +136,7 @@ export default function PantallaEjercicio() {
           boxShadow: seleccionado ? '0 0 24px rgba(244,63,94,0.4)' : 'none'
         }}
       >
-        {cargando ? 'Guardando...' : (seleccionado ? '✨ Entrar a Munchy' : 'Selecciona tu nivel')}
+        {cargando ? 'Guardando...' : (seleccionado ? 'Continuar' : 'Selecciona tu nivel')}
         {!cargando && <span>→</span>}
       </button>
     </main>
