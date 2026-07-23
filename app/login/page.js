@@ -43,8 +43,7 @@ export default function PantallaLogin() {
           const estado = await resEstado.json()
 
           if (!estado.tiene_oficio) { router.push('/oficio'); return }
-          if (!estado.tiene_alergias) { router.push('/alergias'); return }
-          if (!estado.tiene_ejercicio) { router.push('/ejercicio'); return }
+          if (!estado.tiene_nivel_ejercicio) { router.push('/ejercicio'); return }
           if (!estado.tiene_apodo) { router.push('/apodo'); return }
           router.push('/casa')
         } catch (e) {
