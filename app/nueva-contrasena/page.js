@@ -2,17 +2,16 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { createClient } from '@/lib/supabase'
 
 function ContenidoNuevaContrasena() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  const [code, setCode] = useState('')
-  const [enlaceMalo, setEnlaceMalo] = useState(false)
+  const [estado, setEstado] = useState('canjeando') // canjeando | listo_para_cambiar | enlace_malo | exito
   const [contrasena, setContrasena] = useState('')
   const [contrasena2, setContrasena2] = useState('')
   const [cargando, setCargando] = useState(false)
-  const [listo, setListo] = useState(false)
   const [error, setError] = useState('')
 
   const burbujas = [
@@ -24,27 +23,40 @@ function ContenidoNuevaContrasena() {
   ]
 
   useEffect(() => {
-    // 1) Busca el code en la URL normal (?code=XXXX)
-    const codeUrl = searchParams.get('code')
-    const errorUrl = searchParams.get('error')
+    const canjear = async () => {
+      // Busca error o code en la URL normal
+      if (searchParams.get('error')) { setEstado('enlace_malo'); return }
+      let code = searchParams.get('code')
 
-    if (errorUrl) { setEnlaceMalo(true); return }
-    if (codeUrl) { setCode(codeUrl); return }
+      // Respaldo: busca en el hash (#)
+      if (!code && typeof window !== 'undefined' && window.location.hash) {
+        const hash = new URLSearchParams(window.location.hash.substring(1))
+        if (hash.get('error')) { setEstado('enlace_malo'); return }
+        code = hash.get('code')
+      }
 
-    // 2) Respaldo: busca en el hash (#code=XXXX o #error=...)
-    if (typeof window !== 'undefined' && window.location.hash) {
-      const hash = new URLSearchParams(window.location.hash.substring(1))
-      if (hash.get('error')) { setEnlaceMalo(true); return }
-      const codeHash = hash.get('code') || hash.get('access_token')
-      if (codeHash) { setCode(codeHash); return }
+      if (!code) { setEstado('enlace_malo'); return }
+
+      try {
+        // 🔌 SUPABASE (navegador): canjea el código por sesión
+        const supabase = createClient()
+        const { error: errorCanje } = await supabase.auth.exchangeCodeForSession(code)
+
+        if (errorCanje) {
+          setEstado('enlace_malo')
+          return
+        }
+
+        setEstado('listo_para_cambiar')
+      } catch (e) {
+        setEstado('enlace_malo')
+      }
     }
 
-    // 3) No hay nada: enlace inválido
-    setEnlaceMalo(true)
+    canjear()
   }, [searchParams])
 
-  const puedeGuardar =
-    contrasena.length >= 8 && contrasena === contrasena2
+  const puedeGuardar = contrasena.length >= 8 && contrasena === contrasena2
 
   const handleGuardar = async () => {
     if (!puedeGuardar || cargando) return
@@ -52,19 +64,14 @@ function ContenidoNuevaContrasena() {
     setError('')
 
     try {
-      // 🔌 BACKEND: cambia la contraseña con el código del correo
-      const res = await fetch('/api/auth/nueva-contrasena', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, contrasena }),
-      })
+      // 🔌 SUPABASE (navegador): cambia la contraseña con la sesión activa
+      const supabase = createClient()
+      const { error: errorCambio } = await supabase.auth.updateUser({ password: contrasena })
 
-      const data = await res.json()
-
-      if (data.ok) {
-        setListo(true)
+      if (errorCambio) {
+        setError(errorCambio.message || 'No pudimos cambiar tu contraseña.')
       } else {
-        setError(data.mensaje || 'No pudimos cambiar tu contraseña.')
+        setEstado('exito')
       }
     } catch (e) {
       setError('Sin conexión. Revisa tu internet.')
@@ -104,6 +111,10 @@ function ContenidoNuevaContrasena() {
         80%  { opacity: 0.3; }
         100% { transform: translateY(-110vh); opacity: 0; }
       }
+      @keyframes pulso {
+        0%, 100% { opacity: 0.3; transform: scale(1); }
+        50%      { opacity: 1;   transform: scale(1.3); }
+      }
       .borde-vivo {
         position: relative;
         border-radius: 1rem;
@@ -128,8 +139,28 @@ function ContenidoNuevaContrasena() {
     `}</style>
   )
 
+  // Validando el enlace
+  if (estado === 'canjeando') {
+    return (
+      <main className="relative min-h-screen bg-black flex flex-col items-center justify-center px-5 overflow-hidden">
+        {fondo}
+        <div className="relative z-10 text-center">
+          <h1 className="font-serif text-3xl text-crema mb-4">Munchy</h1>
+          <p className="text-sm text-crema opacity-60 mb-4">Validando tu enlace...</p>
+          <div className="flex gap-2 justify-center">
+            {[0,1,2].map(i => (
+              <div key={i} className="w-2 h-2 rounded-full"
+                   style={{ background: '#4ade80', animation: 'pulso 1.2s ease-in-out infinite', animationDelay: `${i*0.2}s`, opacity: 0.3 }} />
+            ))}
+          </div>
+        </div>
+        {estilos}
+      </main>
+    )
+  }
+
   // Enlace expirado o inválido
-  if (enlaceMalo) {
+  if (estado === 'enlace_malo') {
     return (
       <main className="relative min-h-screen bg-black flex flex-col items-center justify-center px-5 py-8 overflow-hidden">
         {fondo}
@@ -138,8 +169,11 @@ function ContenidoNuevaContrasena() {
           <h1 className="font-serif text-3xl text-crema leading-tight mb-3">
             El enlace expiró
           </h1>
-          <p className="text-sm text-crema opacity-70 max-w-xs leading-relaxed mb-8">
+          <p className="text-sm text-crema opacity-70 max-w-xs leading-relaxed mb-2">
             Este enlace ya no sirve o ya se usó. Pide uno nuevo.
+          </p>
+          <p className="text-xs text-crema opacity-50 max-w-xs leading-relaxed mb-8">
+            Ábrelo en el mismo celular o navegador donde pediste la recuperación.
           </p>
           <div className="borde-vivo w-full max-w-xs mx-auto">
             <button
@@ -157,7 +191,7 @@ function ContenidoNuevaContrasena() {
   }
 
   // Contraseña cambiada
-  if (listo) {
+  if (estado === 'exito') {
     return (
       <main className="relative min-h-screen bg-black flex flex-col items-center justify-center px-5 py-8 overflow-hidden">
         {fondo}
@@ -167,14 +201,14 @@ function ContenidoNuevaContrasena() {
             Listo, ya quedó
           </h1>
           <p className="text-sm text-crema opacity-70 max-w-xs leading-relaxed mb-8">
-            Tu contraseña se cambió. Entra con la nueva.
+            Tu contraseña se cambió y ya estás dentro.
           </p>
           <div className="borde-vivo w-full max-w-xs mx-auto">
             <button
-              onClick={() => router.push('/login')}
+              onClick={() => router.push('/casa')}
               className="w-full h-14 bg-olivo text-white rounded-2xl font-semibold text-sm tracking-wide flex items-center justify-center gap-2 active:scale-95 transition-transform relative z-10"
             >
-              Iniciar sesión
+              Entrar a Munchy
               <span>→</span>
             </button>
           </div>
