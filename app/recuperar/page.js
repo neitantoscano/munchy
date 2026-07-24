@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase'
 
 export default function PantallaRecuperar() {
   const router = useRouter()
@@ -26,19 +27,19 @@ export default function PantallaRecuperar() {
     setError('')
 
     try {
-      // 🔌 BACKEND: manda el correo de recuperación
-      const res = await fetch('/api/auth/recuperar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ correo: correo.trim() }),
-      })
+      // 🔌 SUPABASE (navegador): manda el correo de recuperación.
+      // Se hace desde el navegador para que el code verifier de PKCE
+      // quede guardado aquí y el canje del enlace funcione.
+      const supabase = createClient()
+      const { error: errorEnvio } = await supabase.auth.resetPasswordForEmail(
+        correo.trim(),
+        { redirectTo: `${window.location.origin}/nueva-contrasena` }
+      )
 
-      const data = await res.json()
-
-      if (data.ok) {
-        setEnviado(true)
+      if (errorEnvio) {
+        setError(errorEnvio.message || 'No pudimos enviar el correo. Intenta de nuevo.')
       } else {
-        setError(data.mensaje || 'No pudimos enviar el correo. Intenta de nuevo.')
+        setEnviado(true)
       }
     } catch (e) {
       setError('Sin conexión. Revisa tu internet.')
@@ -78,8 +79,11 @@ export default function PantallaRecuperar() {
           <h1 className="font-serif text-3xl text-crema leading-tight mb-3">
             Revisa tu correo
           </h1>
-          <p className="text-sm text-crema opacity-70 max-w-xs leading-relaxed mb-8">
+          <p className="text-sm text-crema opacity-70 max-w-xs leading-relaxed mb-2">
             Si <span className="font-semibold">{correo.trim()}</span> tiene una cuenta, ahí llegará el enlace para crear tu nueva contraseña. Revisa también spam.
+          </p>
+          <p className="text-xs text-crema opacity-50 max-w-xs leading-relaxed mb-8">
+            ⚠️ Ábrelo en este mismo navegador, si no, el enlace no va a funcionar.
           </p>
           <button
             onClick={() => router.push('/login')}
