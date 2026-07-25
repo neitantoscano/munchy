@@ -8,7 +8,8 @@ function ContenidoNuevaContrasena() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  const [estado, setEstado] = useState('canjeando') // canjeando | listo_para_cambiar | enlace_malo | exito
+  const [estado, setEstado] = useState('canjeando')
+  const [detalle, setDetalle] = useState('') // ⚠️ DEBUG: error real, quitar en producción
   const [contrasena, setContrasena] = useState('')
   const [contrasena2, setContrasena2] = useState('')
   const [cargando, setCargando] = useState(false)
@@ -24,31 +25,40 @@ function ContenidoNuevaContrasena() {
 
   useEffect(() => {
     const canjear = async () => {
-      // Busca error o code en la URL normal
-      if (searchParams.get('error')) { setEstado('enlace_malo'); return }
-      let code = searchParams.get('code')
+      const code = searchParams.get('code')
+      const errUrl = searchParams.get('error')
 
-      // Respaldo: busca en el hash (#)
-      if (!code && typeof window !== 'undefined' && window.location.hash) {
-        const hash = new URLSearchParams(window.location.hash.substring(1))
-        if (hash.get('error')) { setEstado('enlace_malo'); return }
-        code = hash.get('code')
+      console.log('=== DEBUG code:', code, '| error URL:', errUrl)
+
+      if (errUrl) {
+        setDetalle(`URL trae error: ${errUrl}`)
+        setEstado('enlace_malo')
+        return
       }
 
-      if (!code) { setEstado('enlace_malo'); return }
+      if (!code) {
+        setDetalle('No se encontró el parámetro "code" en la URL.')
+        setEstado('enlace_malo')
+        return
+      }
 
       try {
-        // 🔌 SUPABASE (navegador): canjea el código por sesión
         const supabase = createClient()
-        const { error: errorCanje } = await supabase.auth.exchangeCodeForSession(code)
+        console.log('=== DEBUG cliente creado, canjeando...')
+
+        const { data, error: errorCanje } = await supabase.auth.exchangeCodeForSession(code)
+        console.log('=== DEBUG respuesta canje:', { data, errorCanje })
 
         if (errorCanje) {
+          setDetalle(`Supabase: ${errorCanje.message}`)
           setEstado('enlace_malo')
           return
         }
 
         setEstado('listo_para_cambiar')
       } catch (e) {
+        console.log('=== DEBUG excepción:', e)
+        setDetalle(`Excepción: ${e?.message || String(e)}`)
         setEstado('enlace_malo')
       }
     }
@@ -64,7 +74,6 @@ function ContenidoNuevaContrasena() {
     setError('')
 
     try {
-      // 🔌 SUPABASE (navegador): cambia la contraseña con la sesión activa
       const supabase = createClient()
       const { error: errorCambio } = await supabase.auth.updateUser({ password: contrasena })
 
@@ -74,7 +83,7 @@ function ContenidoNuevaContrasena() {
         setEstado('exito')
       }
     } catch (e) {
-      setError('Sin conexión. Revisa tu internet.')
+      setError(`Error: ${e?.message || 'Sin conexión.'}`)
     }
     setCargando(false)
   }
@@ -139,7 +148,6 @@ function ContenidoNuevaContrasena() {
     `}</style>
   )
 
-  // Validando el enlace
   if (estado === 'canjeando') {
     return (
       <main className="relative min-h-screen bg-black flex flex-col items-center justify-center px-5 overflow-hidden">
@@ -159,7 +167,6 @@ function ContenidoNuevaContrasena() {
     )
   }
 
-  // Enlace expirado o inválido
   if (estado === 'enlace_malo') {
     return (
       <main className="relative min-h-screen bg-black flex flex-col items-center justify-center px-5 py-8 overflow-hidden">
@@ -172,9 +179,17 @@ function ContenidoNuevaContrasena() {
           <p className="text-sm text-crema opacity-70 max-w-xs leading-relaxed mb-2">
             Este enlace ya no sirve o ya se usó. Pide uno nuevo.
           </p>
-          <p className="text-xs text-crema opacity-50 max-w-xs leading-relaxed mb-8">
+          <p className="text-xs text-crema opacity-50 max-w-xs leading-relaxed mb-4">
             Ábrelo en el mismo celular o navegador donde pediste la recuperación.
           </p>
+
+          {/* ⚠️ DEBUG: quitar este bloque en producción */}
+          {detalle && (
+            <p className="text-[11px] text-salmon max-w-xs mx-auto mb-6 break-words">
+              DEBUG → {detalle}
+            </p>
+          )}
+
           <div className="borde-vivo w-full max-w-xs mx-auto">
             <button
               onClick={() => router.push('/recuperar')}
@@ -190,7 +205,6 @@ function ContenidoNuevaContrasena() {
     )
   }
 
-  // Contraseña cambiada
   if (estado === 'exito') {
     return (
       <main className="relative min-h-screen bg-black flex flex-col items-center justify-center px-5 py-8 overflow-hidden">
@@ -218,7 +232,6 @@ function ContenidoNuevaContrasena() {
     )
   }
 
-  // Formulario
   return (
     <main className="relative min-h-screen bg-black flex flex-col px-5 py-8 overflow-hidden">
       {fondo}
