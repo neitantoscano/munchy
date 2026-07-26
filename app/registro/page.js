@@ -84,6 +84,7 @@ export default function PantallaRegistro() {
           onChange={(e) => setCorreo(e.target.value)}
           placeholder="tucorreo@ejemplo.com"
           autoCapitalize="none"
+          maxLength={60}
           className="w-full px-5 py-4 rounded-2xl bg-white text-olivoOscuro text-base font-medium mb-2 focus:outline-none"
           style={{ border: '1px solid rgba(120,140,190,0.35)' }}
         />
@@ -97,13 +98,14 @@ export default function PantallaRegistro() {
           value={contrasena}
           onChange={(e) => setContrasena(e.target.value)}
           placeholder="Mínimo 8 caracteres"
+          maxLength={25}
           className="w-full px-5 py-4 rounded-2xl bg-white text-olivoOscuro text-base font-medium mb-2 focus:outline-none"
           style={{ border: '1px solid rgba(120,140,190,0.35)' }}
         />
         <p className="text-xs mb-6" style={{ color: contrasena.length > 0 && contrasena.length < 8 ? '#E9967A' : 'rgba(250,249,245,0.5)' }}>
           {contrasena.length > 0 && contrasena.length < 8
             ? `Te faltan ${8 - contrasena.length} caracteres`
-            : 'Mínimo 8 caracteres'}
+            : 'Entre 8 y 25 caracteres'}
         </p>
 
         {error && (
