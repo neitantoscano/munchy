@@ -36,6 +36,13 @@ export async function POST(request) {
       )
     }
 
+    if (contrasena.length > 25) {
+      return NextResponse.json(
+        { ok: false, error: 'contrasena_larga', mensaje: 'La contraseña no puede pasar de 25 caracteres' },
+        { status: 400 }
+      )
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email: correo,
       password: contrasena,
