@@ -104,7 +104,7 @@ export default function PantallaLogin() {
           type="password"
           value={contrasena}
           onChange={(e) => setContrasena(e.target.value)}
-          placeholder="Tu contraseña"
+          placeholder="contraseña de correo sin errores "
           className="w-full px-5 py-4 rounded-2xl bg-white text-olivoOscuro text-base font-medium mb-3 focus:outline-none"
           style={{ border: '1px solid rgba(120,140,190,0.35)' }}
         />
