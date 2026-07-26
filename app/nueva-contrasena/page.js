@@ -1,15 +1,14 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 
-function ContenidoNuevaContrasena() {
+export default function PantallaNuevaContrasena() {
   const router = useRouter()
-  const searchParams = useSearchParams()
 
-  const [estado, setEstado] = useState('canjeando')
-  const [detalle, setDetalle] = useState('') // ⚠️ DEBUG: error real, quitar en producción
+  const [estado, setEstado] = useState('esperando') // esperando | listo_para_cambiar | enlace_malo | exito
+  const [detalle, setDetalle] = useState('') // ⚠️ DEBUG: quitar en producción
   const [contrasena, setContrasena] = useState('')
   const [contrasena2, setContrasena2] = useState('')
   const [cargando, setCargando] = useState(false)
@@ -24,47 +23,52 @@ function ContenidoNuevaContrasena() {
   ]
 
   useEffect(() => {
-    const canjear = async () => {
-      const code = searchParams.get('code')
-      const errUrl = searchParams.get('error')
+    const supabase = createClient()
+    let terminado = false
 
-      console.log('=== DEBUG code:', code, '| error URL:', errUrl)
-
-      if (errUrl) {
-        setDetalle(`URL trae error: ${errUrl}`)
+    // Si la URL trae un error explícito, no hay nada que esperar
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const hash = new URLSearchParams(window.location.hash.substring(1))
+      const errHash = hash.get('error') || hash.get('error_code')
+      if (errHash) {
+        setDetalle(`URL: ${hash.get('error_description') || errHash}`)
         setEstado('enlace_malo')
         return
-      }
-
-      if (!code) {
-        setDetalle('No se encontró el parámetro "code" en la URL.')
-        setEstado('enlace_malo')
-        return
-      }
-
-      try {
-        const supabase = createClient()
-        console.log('=== DEBUG cliente creado, canjeando...')
-
-        const { data, error: errorCanje } = await supabase.auth.exchangeCodeForSession(code)
-        console.log('=== DEBUG respuesta canje:', { data, errorCanje })
-
-        if (errorCanje) {
-          setDetalle(`Supabase: ${errorCanje.message}`)
-          setEstado('enlace_malo')
-          return
-        }
-
-        setEstado('listo_para_cambiar')
-      } catch (e) {
-        console.log('=== DEBUG excepción:', e)
-        setDetalle(`Excepción: ${e?.message || String(e)}`)
-        setEstado('enlace_malo')
       }
     }
 
-    canjear()
-  }, [searchParams])
+    // El cliente de Supabase crea la sesión solo al leer el hash.
+    // Escuchamos hasta que aparezca.
+    const { data: sub } = supabase.auth.onAuthStateChange((evento, sesion) => {
+      console.log('=== DEBUG evento auth:', evento, !!sesion)
+      if (sesion && !terminado) {
+        terminado = true
+        setEstado('listo_para_cambiar')
+      }
+    })
+
+    // Por si la sesión ya existía antes de suscribirnos
+    supabase.auth.getSession().then(({ data }) => {
+      if (data?.session && !terminado) {
+        terminado = true
+        setEstado('listo_para_cambiar')
+      }
+    })
+
+    // Si en 5 segundos no llegó nada, el enlace no sirve
+    const reloj = setTimeout(() => {
+      if (!terminado) {
+        terminado = true
+        setDetalle('No se creó la sesión desde el enlace.')
+        setEstado('enlace_malo')
+      }
+    }, 5000)
+
+    return () => {
+      clearTimeout(reloj)
+      sub?.subscription?.unsubscribe()
+    }
+  }, [])
 
   const puedeGuardar = contrasena.length >= 8 && contrasena === contrasena2
 
@@ -148,7 +152,7 @@ function ContenidoNuevaContrasena() {
     `}</style>
   )
 
-  if (estado === 'canjeando') {
+  if (estado === 'esperando') {
     return (
       <main className="relative min-h-screen bg-black flex flex-col items-center justify-center px-5 overflow-hidden">
         {fondo}
@@ -176,11 +180,8 @@ function ContenidoNuevaContrasena() {
           <h1 className="font-serif text-3xl text-crema leading-tight mb-3">
             El enlace expiró
           </h1>
-          <p className="text-sm text-crema opacity-70 max-w-xs leading-relaxed mb-2">
+          <p className="text-sm text-crema opacity-70 max-w-xs leading-relaxed mb-4">
             Este enlace ya no sirve o ya se usó. Pide uno nuevo.
-          </p>
-          <p className="text-xs text-crema opacity-50 max-w-xs leading-relaxed mb-4">
-            Ábrelo en el mismo celular o navegador donde pediste la recuperación.
           </p>
 
           {/* ⚠️ DEBUG: quitar este bloque en producción */}
@@ -254,13 +255,14 @@ function ContenidoNuevaContrasena() {
           value={contrasena}
           onChange={(e) => setContrasena(e.target.value)}
           placeholder="Mínimo 8 caracteres"
+          maxLength={25}
           className="w-full px-5 py-4 rounded-2xl bg-white text-olivoOscuro text-base font-medium mb-2 focus:outline-none"
           style={{ border: '1px solid rgba(120,140,190,0.35)' }}
         />
         <p className="text-xs mb-5" style={{ color: contrasena.length > 0 && contrasena.length < 8 ? '#E9967A' : 'rgba(250,249,245,0.5)' }}>
           {contrasena.length > 0 && contrasena.length < 8
             ? `Te faltan ${8 - contrasena.length} caracteres`
-            : 'Mínimo 8 caracteres'}
+            : 'Entre 8 y 25 caracteres'}
         </p>
 
         <label className="text-xs font-bold uppercase tracking-wider text-salmon mb-2 block">Repítela</label>
@@ -269,6 +271,7 @@ function ContenidoNuevaContrasena() {
           value={contrasena2}
           onChange={(e) => setContrasena2(e.target.value)}
           placeholder="La misma contraseña"
+          maxLength={25}
           className="w-full px-5 py-4 rounded-2xl bg-white text-olivoOscuro text-base font-medium mb-2 focus:outline-none"
           style={{ border: '1px solid rgba(120,140,190,0.35)' }}
         />
@@ -298,17 +301,5 @@ function ContenidoNuevaContrasena() {
 
       {estilos}
     </main>
-  )
-}
-
-export default function PantallaNuevaContrasena() {
-  return (
-    <Suspense fallback={
-      <main className="min-h-screen bg-black flex items-center justify-center">
-        <span className="font-serif text-2xl text-crema">Munchy</span>
-      </main>
-    }>
-      <ContenidoNuevaContrasena />
-    </Suspense>
   )
 }
