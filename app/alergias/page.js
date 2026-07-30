@@ -18,6 +18,7 @@ export default function PantallaAlergias() {
   ]
 
   const toggleAlergia = (id) => {
+    if (cargando) return
     if (seleccionadas.includes(id)) {
       setSeleccionadas(seleccionadas.filter(a => a !== id))
     } else {
@@ -26,11 +27,14 @@ export default function PantallaAlergias() {
   }
 
   const guardarAlergias = async (lista) => {
+    // 🔒 CANDADO: evita que se mande dos veces (el endpoint reemplaza la lista,
+    // así que una segunda llamada con array vacío borraría lo guardado).
+    if (cargando) return
     setCargando(true)
     setError('')
 
     try {
-      // 🔌 BACKEND: Guarda las alergias en Supabase
+      // 🔌 BACKEND: reemplaza la lista completa de alergias
       const res = await fetch('/api/usuario/alergias', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -74,10 +78,11 @@ export default function PantallaAlergias() {
         <div className="flex-1 h-1 rounded-full" style={{ background: '#22d3ee', boxShadow: '0 0 8px #22d3ee' }}></div>
         <div className="flex-1 h-1 rounded-full" style={{ background: '#22d3ee', boxShadow: '0 0 8px #22d3ee' }}></div>
         <div className="flex-1 h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.15)' }}></div>
+        <div className="flex-1 h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.15)' }}></div>
       </div>
 
       <div className="relative z-10 mb-6">
-        <p className="text-xs font-bold uppercase tracking-wider text-salmon mb-2">Paso 2 de 3</p>
+        <p className="text-xs font-bold uppercase tracking-wider text-salmon mb-2">Paso 2 de 4</p>
         <h1 className="font-serif text-2xl text-crema leading-tight mb-2">Cosas a las que eres alérgico<br />o tienes prohibido comer</h1>
         <p className="text-sm text-crema opacity-70 leading-relaxed">Selecciona todas las que apliquen. Munchy nunca te dará recetas con esto.</p>
       </div>
@@ -153,9 +158,15 @@ export default function PantallaAlergias() {
           {!cargando && <span>→</span>}
         </button>
 
-        <button onClick={() => guardarAlergias([])} disabled={cargando} className="text-sm text-crema opacity-70 underline py-2">
-          No tengo alergias ni restricciones
-        </button>
+        {seleccionadas.length === 0 && (
+          <button
+            onClick={() => guardarAlergias([])}
+            disabled={cargando}
+            className="text-sm text-crema opacity-70 underline py-2"
+          >
+            No tengo alergias ni restricciones
+          </button>
+        )}
       </div>
     </main>
   )
