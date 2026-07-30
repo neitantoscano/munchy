@@ -1,4 +1,5 @@
 import './globals.css'
+import VigilanteVersion from './vigilante-version'
 
 export const metadata = {
   title: 'Munchy',
@@ -28,6 +29,7 @@ export default function RootLayout({ children }) {
       <body className="bg-crema text-olivoOscuro font-sans antialiased">
         <div className="max-w-md mx-auto min-h-screen relative">
           {children}
+          <VigilanteVersion />
         </div>
       </body>
     </html>
