@@ -62,8 +62,14 @@ export async function POST() {
     return NextResponse.json({ ok: true, url: sesion.url })
 
   } catch (err) {
+    // Mostramos el error real de Stripe para poder diagnosticar.
     return NextResponse.json(
-      { ok: false, error: 'servidor', mensaje: 'No se pudo iniciar el pago' },
+      {
+        ok: false,
+        error: 'servidor',
+        mensaje: err?.message || 'No se pudo iniciar el pago',
+        tipo: err?.type || null,
+      },
       { status: 500 }
     )
   }
