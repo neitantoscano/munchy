@@ -62,14 +62,11 @@ export async function POST() {
     return NextResponse.json({ ok: true, url: sesion.url })
 
   } catch (err) {
-    // Mostramos el error real de Stripe para poder diagnosticar.
+    // El detalle del error queda solo en los logs de Vercel, no se expone al usuario.
+    console.error('Error al crear sesión de Stripe:', err?.message)
+
     return NextResponse.json(
-      {
-        ok: false,
-        error: 'servidor',
-        mensaje: err?.message || 'No se pudo iniciar el pago',
-        tipo: err?.type || null,
-      },
+      { ok: false, error: 'servidor', mensaje: 'No se pudo iniciar el pago' },
       { status: 500 }
     )
   }
