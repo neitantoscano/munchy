@@ -1,6 +1,6 @@
 // ⚠️ SÚBELE ESTE NÚMERO EN CADA DEPLOY IMPORTANTE.
 // Al cambiar, el navegador detecta versión nueva y avisa al usuario.
-const VERSION = 'munchy-v2'
+const VERSION = 'munchy-v1'
 const CACHE = VERSION
 
 // Al instalar: no esperamos, quedamos listos.
