@@ -20,12 +20,19 @@ export default function PortadaMunchy() {
 
         const data = await res.json()
 
-        // PRIMERO la sesión. Sin sesión no tiene caso preguntar lo demás.
+        // 1) PRIMERO la sesión
         if (!data || data.ok === false || !data.tiene_sesion) {
           router.replace('/bienvenida')
           return
         }
 
+        // 2) Si ya llenó todo el cuestionario, va directo a casa
+        if (data.cuestionario_completo) {
+          router.replace('/casa')
+          return
+        }
+
+        // 3) Si le falta algo, al paso pendiente
         if (!data.tiene_oficio) { router.replace('/oficio'); return }
         if (!data.tiene_nivel_ejercicio) { router.replace('/ejercicio'); return }
         if (!data.tiene_apodo) { router.replace('/apodo'); return }
