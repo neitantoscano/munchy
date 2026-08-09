@@ -17,12 +17,10 @@ export async function POST(request) {
     const body = await request.json()
     const lista = body?.alergias
 
-    // Debe ser un array (puede estar vacío)
     if (!Array.isArray(lista)) {
-      return NextResponse.json({ ok: false, error: 'formato_invalido' }, { status: 400 })
+      return NextResponse.json({ ok: false, error: 'formato_invalido', recibido: body }, { status: 400 })
     }
 
-    // Validar que cada alergia sea de las permitidas
     for (const a of lista) {
       if (!ALERGIAS_VALIDAS.includes(a)) {
         return NextResponse.json({ ok: false, error: 'alergia_invalida', valor: a }, { status: 400 })
@@ -36,10 +34,16 @@ export async function POST(request) {
       .eq('usuario_id', user.id)
 
     if (errorBorrar) {
-      return NextResponse.json({ ok: false, error: 'borrado_fallo', mensaje: errorBorrar.message }, { status: 500 })
+      return NextResponse.json({
+        ok: false,
+        error: 'borrado_fallo',
+        mensaje: errorBorrar.message,
+        detalle: errorBorrar.details || null,
+        pista: errorBorrar.hint || null,
+        codigo: errorBorrar.code || null,
+      }, { status: 500 })
     }
 
-    // Si la lista está vacía, terminamos aquí (sin alergias)
     if (lista.length === 0) {
       return NextResponse.json({ ok: true, alergias: [] })
     }
@@ -52,13 +56,24 @@ export async function POST(request) {
       .insert(filas)
 
     if (errorInsertar) {
-      return NextResponse.json({ ok: false, error: 'insertar_fallo', mensaje: errorInsertar.message }, { status: 500 })
+      return NextResponse.json({
+        ok: false,
+        error: 'insertar_fallo',
+        mensaje: errorInsertar.message,
+        detalle: errorInsertar.details || null,
+        pista: errorInsertar.hint || null,
+        codigo: errorInsertar.code || null,
+      }, { status: 500 })
     }
 
     return NextResponse.json({ ok: true, alergias: lista })
 
   } catch (err) {
-    return NextResponse.json({ ok: false, error: 'servidor', mensaje: 'Algo salió mal' }, { status: 500 })
+    return NextResponse.json({
+      ok: false,
+      error: 'servidor',
+      mensaje: err?.message || 'Algo salió mal',
+    }, { status: 500 })
   }
 }
 
@@ -78,7 +93,12 @@ export async function GET() {
       .eq('usuario_id', user.id)
 
     if (error) {
-      return NextResponse.json({ ok: false, error: 'lectura_fallo', mensaje: error.message }, { status: 500 })
+      return NextResponse.json({
+        ok: false,
+        error: 'lectura_fallo',
+        mensaje: error.message,
+        codigo: error.code || null,
+      }, { status: 500 })
     }
 
     const lista = data.map((fila) => fila.tipo)
@@ -86,6 +106,10 @@ export async function GET() {
     return NextResponse.json({ ok: true, alergias: lista })
 
   } catch (err) {
-    return NextResponse.json({ ok: false, error: 'servidor', mensaje: 'Algo salió mal' }, { status: 500 })
+    return NextResponse.json({
+      ok: false,
+      error: 'servidor',
+      mensaje: err?.message || 'Algo salió mal',
+    }, { status: 500 })
   }
 }
