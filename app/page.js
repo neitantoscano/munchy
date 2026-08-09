@@ -11,9 +11,21 @@ export default function PortadaMunchy() {
       try {
         // 🔌 BACKEND: pregunta qué datos ya tiene el usuario
         const res = await fetch('/api/usuario/estado', { cache: 'no-store' })
+
+        // Sesión vencida o no autorizado → al login, nunca al cuestionario
+        if (res.status === 401 || res.status === 403) {
+          router.replace('/login')
+          return
+        }
+
         const data = await res.json()
 
-        if (!data.tiene_sesion) { router.replace('/bienvenida'); return }
+        // PRIMERO la sesión. Sin sesión no tiene caso preguntar lo demás.
+        if (!data || data.ok === false || !data.tiene_sesion) {
+          router.replace('/bienvenida')
+          return
+        }
+
         if (!data.tiene_oficio) { router.replace('/oficio'); return }
         if (!data.tiene_nivel_ejercicio) { router.replace('/ejercicio'); return }
         if (!data.tiene_apodo) { router.replace('/apodo'); return }
