@@ -1,12 +1,10 @@
 // ⚠️ SÚBELE ESTE NÚMERO EN CADA DEPLOY IMPORTANTE.
 // Al cambiar, el navegador detecta versión nueva y avisa al usuario.
-const VERSION = 'munchy-v1'
+const VERSION = 'munchy-v3'
 const CACHE = VERSION
 
-// Al instalar: no esperamos, quedamos listos.
-self.addEventListener('install', (evento) => {
-  // No precargamos nada para no servir pantallas viejas.
-  self.skipWaiting = self.skipWaiting
+self.addEventListener('install', () => {
+  // No precargamos nada.
 })
 
 // Al activar: borramos cachés de versiones anteriores.
@@ -30,32 +28,52 @@ self.addEventListener('message', (evento) => {
   }
 })
 
-// Estrategia: RED PRIMERO.
-// Siempre intentamos traer lo nuevo del servidor. El caché es solo
-// respaldo por si no hay internet.
-self.addEventListener('fetch', (evento) => {
-  const peticion = evento.request
+// ¿Este archivo lo puede manejar el Service Worker?
+// SOLO archivos estáticos. Nada de APIs ni páginas.
+function esEstatico(peticion) {
+  let url
+  try {
+    url = new URL(peticion.url)
+  } catch (e) {
+    return false
+  }
 
-  // Solo manejamos GET del mismo sitio. Nada de APIs ni Supabase.
-  if (peticion.method !== 'GET') return
-  if (!peticion.url.startsWith(self.location.origin)) return
-  if (peticion.url.includes('/api/')) return
+  // Solo del mismo sitio
+  if (url.origin !== self.location.origin) return false
+  // Solo GET
+  if (peticion.method !== 'GET') return false
+  // NUNCA tocar el backend
+  if (url.pathname.startsWith('/api/')) return false
+  // Nunca tocar navegaciones (páginas)
+  if (peticion.mode === 'navigate') return false
+
+  // Solo estas carpetas y estos tipos de archivo
+  const permitido =
+    url.pathname.startsWith('/_next/static/') ||
+    url.pathname.startsWith('/icons/') ||
+    /\.(png|jpg|jpeg|gif|webp|svg|ico|woff2?)$/i.test(url.pathname)
+
+  return permitido
+}
+
+// Estrategia para estáticos: caché primero, red de respaldo.
+self.addEventListener('fetch', (evento) => {
+  if (!esEstatico(evento.request)) return // pasa directo, sin tocarlo
 
   evento.respondWith(
     (async () => {
+      const guardado = await caches.match(evento.request)
+      if (guardado) return guardado
+
       try {
-        const respuesta = await fetch(peticion)
-        // Guardamos copia de respaldo para modo sin internet.
+        const respuesta = await fetch(evento.request)
         if (respuesta && respuesta.status === 200) {
           const cache = await caches.open(CACHE)
-          cache.put(peticion, respuesta.clone())
+          cache.put(evento.request, respuesta.clone())
         }
         return respuesta
       } catch (e) {
-        // Sin internet: usamos el respaldo si existe.
-        const guardado = await caches.match(peticion)
-        if (guardado) return guardado
-        throw e
+        return fetch(evento.request)
       }
     })()
   )
