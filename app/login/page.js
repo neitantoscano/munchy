@@ -42,6 +42,9 @@ export default function PantallaLogin() {
           const resEstado = await fetch('/api/usuario/estado', { cache: 'no-store' })
           const estado = await resEstado.json()
 
+          // Si ya llenó todo el cuestionario, va directo a casa
+          if (estado.cuestionario_completo) { router.push('/casa'); return }
+
           if (!estado.tiene_oficio) { router.push('/oficio'); return }
           if (!estado.tiene_nivel_ejercicio) { router.push('/ejercicio'); return }
           if (!estado.tiene_apodo) { router.push('/apodo'); return }
@@ -95,6 +98,7 @@ export default function PantallaLogin() {
           onChange={(e) => setCorreo(e.target.value)}
           placeholder="tucorreo@ejemplo.com"
           autoCapitalize="none"
+          maxLength={60}
           className="w-full px-5 py-4 rounded-2xl bg-white text-olivoOscuro text-base font-medium mb-5 focus:outline-none"
           style={{ border: '1px solid rgba(120,140,190,0.35)' }}
         />
@@ -104,7 +108,8 @@ export default function PantallaLogin() {
           type="password"
           value={contrasena}
           onChange={(e) => setContrasena(e.target.value)}
-          placeholder="contraseña para munchy"
+          placeholder="Tu contraseña"
+          maxLength={25}
           className="w-full px-5 py-4 rounded-2xl bg-white text-olivoOscuro text-base font-medium mb-3 focus:outline-none"
           style={{ border: '1px solid rgba(120,140,190,0.35)' }}
         />
