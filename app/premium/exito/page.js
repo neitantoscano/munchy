@@ -54,7 +54,7 @@ export default function PantallaPagoExitoso() {
           ¡Ya eres Premium!
         </h1>
         <p className="text-sm text-crema opacity-70 max-w-xs mx-auto leading-relaxed mb-2">
-          Recetas ilimitadas desbloqueadas. Cocina sin límites. 🔥
+          Ahora tienes hasta 20 recetas al día. Cocina sin frenos. 🔥
         </p>
         <p className="text-xs text-crema opacity-50 max-w-xs mx-auto leading-relaxed mb-8">
           Si aún no ves el cambio, dale unos segundos y recarga.
