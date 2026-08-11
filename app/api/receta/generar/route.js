@@ -9,7 +9,8 @@ import Anthropic from '@anthropic-ai/sdk'
 import { NextResponse } from 'next/server'
 
 // ─── Configuración ───
-const LIMITE_FREE = 3 // recetas con IA por día (plan free)
+const LIMITE_FREE = 2   // recetas con IA por día (plan free)
+const LIMITE_PRO = 20   // recetas con IA por día (plan Pro)
 const MODELO = 'claude-haiku-4-5'
 
 // Básicos universales (para la primera receta, despensa vacía)
@@ -98,6 +99,9 @@ export async function POST(request) {
         ? (usuario.recetas_hoy || 0)
         : 0
 
+    // Límite que aplica según el plan
+    const limiteDelUsuario = usuario.es_premium ? LIMITE_PRO : LIMITE_FREE
+
     // 4. Leer alergias del usuario
     const { data: alergiasData } = await supabase
       .from('alergias')
@@ -152,10 +156,14 @@ export async function POST(request) {
 
     // 7. Si NO vino de caché → revisar límite y llamar a la IA
     if (!recetaFinal) {
-      // Límite diario (solo aplica a generación con IA, y solo a free)
-      if (!usuario.es_premium && usadasHoy >= LIMITE_FREE) {
+      // Límite diario (solo aplica a generación con IA)
+      if (usadasHoy >= limiteDelUsuario) {
+        const mensajeLimite = usuario.es_premium
+          ? `Llegaste a tus ${LIMITE_PRO} recetas de hoy. Vuelve mañana 🌙`
+          : `Llegaste a tus ${LIMITE_FREE} recetas de hoy. Hazte Pro para más recetas 🚀`
+
         return NextResponse.json(
-          { ok: false, error: 'limite_diario', mensaje: 'Llegaste a tus 3 recetas de hoy. Hazte Pro para recetas ilimitadas 🚀' },
+          { ok: false, error: 'limite_diario', mensaje: mensajeLimite },
           { status: 403 }
         )
       }
@@ -232,13 +240,8 @@ export async function POST(request) {
     }
 
     // 9. Calcular recetas restantes para hoy
-    let recetasRestantes
-    if (usuario.es_premium) {
-      recetasRestantes = 999 // ilimitado
-    } else {
-      const usadasFinal = vinoDeCache ? usadasHoy : usadasHoy + 1
-      recetasRestantes = Math.max(0, LIMITE_FREE - usadasFinal)
-    }
+    const usadasFinal = vinoDeCache ? usadasHoy : usadasHoy + 1
+    const recetasRestantes = Math.max(0, limiteDelUsuario - usadasFinal)
 
     // 10. Devolver la receta con la forma que espera el frontend
     return NextResponse.json({
