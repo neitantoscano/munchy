@@ -1,8 +1,9 @@
 import { createServerSupabase } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 
-// Límite de recetas diarias para usuarios free
-const LIMITE_FREE = 3
+// Límites de recetas diarias
+const LIMITE_FREE = 2
+const LIMITE_PRO = 20
 
 // ─── Helpers de fecha (México UTC-6) ───
 function fechaMexico() {
@@ -50,12 +51,8 @@ export async function GET() {
         ? (perfil.recetas_hoy || 0)
         : 0
 
-    let recetas_restantes_hoy
-    if (perfil.es_premium) {
-      recetas_restantes_hoy = 999 // ilimitado en la práctica
-    } else {
-      recetas_restantes_hoy = Math.max(0, LIMITE_FREE - usadasHoy)
-    }
+    const limiteDelUsuario = perfil.es_premium ? LIMITE_PRO : LIMITE_FREE
+    const recetas_restantes_hoy = Math.max(0, limiteDelUsuario - usadasHoy)
 
     // 3. Calcular la racha real (con conciencia de fecha)
     let racha_dias = perfil.racha_dias || 0
@@ -90,6 +87,7 @@ export async function GET() {
       apodo: perfil.apodo || 'Munchie Fan',
       racha_dias: racha_dias,
       recetas_restantes_hoy: recetas_restantes_hoy,
+      limite_diario: limiteDelUsuario,
       es_premium: perfil.es_premium || false,
       ingredientes_en_despensa: ingredientes_en_despensa,
       dato_curioso: dato_curioso,
@@ -129,14 +127,12 @@ async function obtenerDatoDelDia(supabase) {
 // usa el módulo para que igual haya una frase cada día.
 async function obtenerFrasePremiumDelDia(supabase) {
   try {
-    // Contar cuántas frases hay
     const { count } = await supabase
       .from('frases_premium')
       .select('*', { count: 'exact', head: true })
 
     if (!count || count === 0) return null
 
-    // Día del año → índice dentro del total de frases (rotación)
     const diaDelAno = calcularDiaDelAno()
     const orden = ((diaDelAno - 1) % count) + 1
 
