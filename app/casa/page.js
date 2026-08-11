@@ -19,6 +19,7 @@ export default function PantallaCasa() {
           apodo: data.apodo || 'Munchie Fan',
           racha_dias: data.racha_dias ?? 0,
           recetas_restantes_hoy: data.recetas_restantes_hoy ?? 0,
+          limite_diario: data.limite_diario ?? null,
           es_premium: !!data.es_premium,
           ingredientes_en_despensa: data.ingredientes_en_despensa ?? 0,
           dato_curioso: data.dato_curioso || '',
@@ -42,8 +43,8 @@ export default function PantallaCasa() {
   }, [])
 
   const irAGenerar = () => {
-    if (!datos.es_premium && datos.recetas_restantes_hoy === 0) {
-      router.push('/premium')
+    if (datos.recetas_restantes_hoy === 0) {
+      if (!datos.es_premium) { router.push('/premium'); return }
       return
     }
     router.push('/generar')
@@ -74,9 +75,11 @@ export default function PantallaCasa() {
     )
   }
 
-  const recetasTexto = datos.es_premium
-    ? 'Recetas ilimitadas'
-    : `${datos.recetas_restantes_hoy} ${datos.recetas_restantes_hoy === 1 ? 'receta gratis' : 'recetas gratis'} hoy`
+  // Texto de recetas restantes. Usa limite_diario del backend, nada a mano.
+  const restantes = datos.recetas_restantes_hoy
+  const recetasTexto = restantes === 0
+    ? (datos.es_premium ? 'Ya usaste tus recetas de hoy' : 'Sin recetas hoy · Hazte Pro')
+    : `${restantes} ${restantes === 1 ? 'receta' : 'recetas'} hoy${datos.limite_diario ? ` de ${datos.limite_diario}` : ''}`
 
   // Texto que se muestra en el bloque de Munchie:
   // - Premium con frase → la frase del día
