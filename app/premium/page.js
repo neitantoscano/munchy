@@ -9,7 +9,7 @@ export default function PantallaPremium() {
   const [error, setError] = useState('')
 
   const beneficios = [
-    { icono: '♾️', titulo: 'Recetas ilimitadas', sub: 'Genera todas las que quieras, sin límite diario' },
+    { icono: '🔥', titulo: 'Hasta 20 recetas al día', sub: '10 veces más que el plan gratis' },
     { icono: '⚡', titulo: 'Generación prioritaria', sub: 'Tus recetas se crean más rápido' },
     { icono: '✨', titulo: 'Ingredientes Pro siempre', sub: 'Sugerencias gourmet en cada receta' },
     { icono: '🚫', titulo: 'Sin anuncios', sub: 'Experiencia limpia, enfocada en cocinar' },
@@ -99,7 +99,7 @@ export default function PantallaPremium() {
             Munchy Premium
           </h1>
           <p className="text-sm text-crema opacity-70 leading-relaxed max-w-xs">
-            Lleva tu alimentación al siguiente nivel sin límites.
+            Cocina todos los días sin quedarte sin recetas.
           </p>
         </div>
 
