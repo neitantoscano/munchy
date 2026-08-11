@@ -127,7 +127,7 @@ export default function PantallaPremium() {
             Plan mensual
           </p>
           <div className="flex items-baseline gap-1 mb-1">
-            <span className="font-serif text-4xl text-olivoOscuro">$80</span>
+            <span className="font-serif text-4xl text-olivoOscuro">$99</span>
             <span className="text-sm text-olivoOscuro opacity-60">MXN / mes</span>
           </div>
           <p className="text-xs text-olivoOscuro opacity-60">
