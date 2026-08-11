@@ -231,7 +231,7 @@ export default function PantallaPerfil() {
             <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center text-2xl flex-shrink-0">👑</div>
             <div className="flex-1 text-left">
               <p className="font-semibold text-base text-white">Hazte Premium</p>
-              <p className="text-xs text-white/80">Recetas ilimitadas por $80 MXN/mes</p>
+              <p className="text-xs text-white/80">Hasta 20 recetas al día por $80 MXN/mes</p>
             </div>
             <span className="text-white text-xl">→</span>
           </button>
