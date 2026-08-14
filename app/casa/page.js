@@ -118,6 +118,45 @@ export default function PantallaCasa() {
             )}
           </div>
           <span className="font-serif text-xl text-crema">Munchy</span>
+
+          {/* ♾️ Infinito con líquido neón corriendo por dentro */}
+          <svg width="34" height="20" viewBox="0 0 68 40" fill="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="liquidoNeon" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%"   stopColor="#4ade80" />
+                <stop offset="33%"  stopColor="#22d3ee" />
+                <stop offset="66%"  stopColor="#a855f7" />
+                <stop offset="100%" stopColor="#fb923c" />
+              </linearGradient>
+              <filter id="brilloNeon" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="2.2" result="borroso" />
+                <feMerge>
+                  <feMergeNode in="borroso" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+
+            {/* Tubo de fondo */}
+            <path
+              d="M34 20 C 27 8, 10 8, 10 20 C 10 32, 27 32, 34 20 C 41 8, 58 8, 58 20 C 58 32, 41 32, 34 20 Z"
+              stroke="rgba(255,255,255,0.14)"
+              strokeWidth="5"
+              strokeLinecap="round"
+              fill="none"
+            />
+
+            {/* Líquido que corre por dentro */}
+            <path
+              className="liquido"
+              d="M34 20 C 27 8, 10 8, 10 20 C 10 32, 27 32, 34 20 C 41 8, 58 8, 58 20 C 58 32, 41 32, 34 20 Z"
+              stroke="url(#liquidoNeon)"
+              strokeWidth="4"
+              strokeLinecap="round"
+              fill="none"
+              filter="url(#brilloNeon)"
+            />
+          </svg>
         </div>
 
         <div className="flex items-center gap-2">
@@ -150,12 +189,25 @@ export default function PantallaCasa() {
         </div>
 
         {datos.dato_curioso && (
-          <div className="bg-white rounded-2xl p-4 mb-6 border border-olivoClaro/30" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full bg-ambarFixed flex items-center justify-center text-xl flex-shrink-0">💡</div>
+          <div className="rounded-2xl p-4 mb-6 relative overflow-hidden"
+               style={{
+                 background: 'linear-gradient(160deg, #39415a 0%, #262c3d 55%, #171a24 100%)',
+                 border: '1px solid rgba(120,140,190,0.28)',
+                 boxShadow: '0 4px 18px rgba(0,0,0,0.5)',
+               }}>
+            {/* 3 glows suaves dentro de la tarjeta */}
+            <div className="pointer-events-none absolute inset-0">
+              <div className="absolute -top-6 -right-4 w-24 h-24 rounded-full" style={{ background: '#8a8f99', filter: 'blur(30px)', opacity: 0.28 }} />
+              <div className="absolute top-1/2 left-1/3 w-20 h-20 rounded-full" style={{ background: '#c9cbd1', filter: 'blur(28px)', opacity: 0.18 }} />
+              <div className="absolute -bottom-6 -left-4 w-24 h-24 rounded-full" style={{ background: '#b0a99f', filter: 'blur(30px)', opacity: 0.22 }} />
+            </div>
+
+            <div className="relative flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl flex-shrink-0"
+                   style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.16)' }}>💡</div>
               <div className="flex-1">
-                <p className="text-xs font-bold uppercase tracking-wider text-ambar mb-1">Dato del día</p>
-                <p className="text-sm text-olivoOscuro leading-relaxed">{datos.dato_curioso}</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-salmon mb-1">Dato del día</p>
+                <p className="text-sm text-crema opacity-85 leading-relaxed">{datos.dato_curioso}</p>
               </div>
             </div>
           </div>
@@ -238,6 +290,14 @@ export default function PantallaCasa() {
         @keyframes pulso {
           0%, 100% { opacity: 0.3; transform: scale(1); }
           50% { opacity: 1; transform: scale(1.3); }
+        }
+        /* Líquido neón corriendo dentro del infinito */
+        .liquido {
+          stroke-dasharray: 34 136;
+          animation: correrLiquido 2.6s linear infinite;
+        }
+        @keyframes correrLiquido {
+          to { stroke-dashoffset: -170; }
         }
       `}</style>
     </main>
