@@ -94,6 +94,13 @@ export default function PantallaCasa() {
     ? '👑 Tu momento Premium'
     : '¡Qué onda, soy Munchie!'
 
+  const navItems = [
+    { id: 'casa', label: 'Casa', icono: '🏠', activo: true },
+    { id: 'despensa', label: 'Despensa', icono: '📦' },
+    { id: 'guardados', label: 'Guardados', icono: '🔖' },
+    { id: 'perfil', label: 'Perfil', icono: '👤' },
+  ]
+
   return (
     <main className="relative min-h-screen bg-black pb-24">
 
@@ -195,11 +202,11 @@ export default function PantallaCasa() {
                  border: '1px solid rgba(120,140,190,0.28)',
                  boxShadow: '0 4px 18px rgba(0,0,0,0.5)',
                }}>
-            {/* 3 glows suaves dentro de la tarjeta */}
+            {/* 3 glows dentro de la tarjeta */}
             <div className="pointer-events-none absolute inset-0">
-              <div className="absolute -top-6 -right-4 w-24 h-24 rounded-full" style={{ background: '#8a8f99', filter: 'blur(30px)', opacity: 0.28 }} />
-              <div className="absolute top-1/2 left-1/3 w-20 h-20 rounded-full" style={{ background: '#c9cbd1', filter: 'blur(28px)', opacity: 0.18 }} />
-              <div className="absolute -bottom-6 -left-4 w-24 h-24 rounded-full" style={{ background: '#b0a99f', filter: 'blur(30px)', opacity: 0.22 }} />
+              <div className="absolute -top-8 -right-6 w-28 h-28 rounded-full" style={{ background: '#aeb4c4', filter: 'blur(26px)', opacity: 0.5 }} />
+              <div className="absolute top-1/2 left-1/3 w-24 h-24 rounded-full" style={{ background: '#e2e5ec', filter: 'blur(24px)', opacity: 0.32 }} />
+              <div className="absolute -bottom-8 -left-6 w-28 h-28 rounded-full" style={{ background: '#c4bcae', filter: 'blur(26px)', opacity: 0.42 }} />
             </div>
 
             <div className="relative flex items-start gap-3">
@@ -249,34 +256,70 @@ export default function PantallaCasa() {
             <button onClick={() => router.push('/despensa')} className="text-xs font-semibold text-salmon bg-salmon/10 rounded-full px-3 py-1.5">Ver todo →</button>
           </div>
 
-          {datos.ingredientes_en_despensa === 0 ? (
-            <div className="bg-white rounded-2xl p-5 text-center border-2 border-dashed border-olivoClaro">
-              <p className="text-3xl mb-2">📦</p>
-              <p className="text-sm text-olivoOscuro opacity-70 mb-3">Tu despensa está vacía</p>
-              <button onClick={() => router.push('/despensa')} className="text-sm font-semibold text-olivo underline">Agregar ingredientes</button>
+          <div className="rounded-2xl p-5 text-center relative overflow-hidden"
+               style={{
+                 background: 'linear-gradient(160deg, #39415a 0%, #262c3d 55%, #171a24 100%)',
+                 border: datos.ingredientes_en_despensa === 0
+                   ? '2px dashed rgba(120,140,190,0.4)'
+                   : '1px solid rgba(120,140,190,0.28)',
+                 boxShadow: '0 4px 18px rgba(0,0,0,0.5)',
+               }}>
+            {/* 3 glows dentro de la tarjeta */}
+            <div className="pointer-events-none absolute inset-0">
+              <div className="absolute -top-8 -left-6 w-28 h-28 rounded-full" style={{ background: '#aeb4c4', filter: 'blur(26px)', opacity: 0.5 }} />
+              <div className="absolute top-1/3 right-1/4 w-24 h-24 rounded-full" style={{ background: '#e2e5ec', filter: 'blur(24px)', opacity: 0.32 }} />
+              <div className="absolute -bottom-8 -right-6 w-28 h-28 rounded-full" style={{ background: '#c4bcae', filter: 'blur(26px)', opacity: 0.42 }} />
             </div>
-          ) : (
-            <div className="bg-white rounded-2xl p-5 text-center border border-olivoClaro/30" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-              <p className="font-serif text-3xl text-olivoOscuro mb-1">{datos.ingredientes_en_despensa}</p>
-              <p className="text-xs text-olivoOscuro opacity-60 uppercase tracking-wide">
-                {datos.ingredientes_en_despensa === 1 ? 'ingrediente guardado' : 'ingredientes guardados'}
-              </p>
-            </div>
-          )}
+
+            {datos.ingredientes_en_despensa === 0 ? (
+              <div className="relative">
+                <p className="text-3xl mb-2">📦</p>
+                <p className="text-sm text-crema opacity-75 mb-3">Tu despensa está vacía</p>
+                <button onClick={() => router.push('/despensa')} className="text-sm font-semibold text-crema underline">Agregar ingredientes</button>
+              </div>
+            ) : (
+              <div className="relative">
+                <p className="font-serif text-3xl text-crema mb-1">{datos.ingredientes_en_despensa}</p>
+                <p className="text-xs text-crema opacity-60 uppercase tracking-wide">
+                  {datos.ingredientes_en_despensa === 1 ? 'ingrediente guardado' : 'ingredientes guardados'}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md px-5 pb-4 z-50">
-        <div className="bg-white/95 backdrop-blur-md rounded-3xl px-2 py-2 flex justify-around items-center border border-olivoClaro/30" style={{ boxShadow: '0 -2px 20px rgba(0,0,0,0.08)' }}>
-          {[
-            { id: 'casa', label: 'Casa', icono: '🏠', activo: true },
-            { id: 'despensa', label: 'Despensa', icono: '📦' },
-            { id: 'guardados', label: 'Guardados', icono: '🔖' },
-            { id: 'perfil', label: 'Perfil', icono: '👤' },
-          ].map(item => (
-            <button key={item.id} onClick={() => router.push(`/${item.id}`)} className="flex flex-col items-center gap-1 py-2 px-3 rounded-2xl transition-all" style={{ background: item.activo ? '#2e3a23' : 'transparent' }}>
-              <span className="text-base" style={{ filter: item.activo ? 'brightness(10)' : 'none' }}>{item.icono}</span>
-              <span className={`text-[10px] font-semibold ${item.activo ? 'text-white' : 'text-olivoOscuro opacity-60'}`}>{item.label}</span>
+        <div className="rounded-3xl px-2 py-2 flex justify-around items-center relative overflow-hidden"
+             style={{
+               background: 'rgba(22,24,32,0.92)',
+               backdropFilter: 'blur(16px)',
+               border: '1px solid rgba(120,140,190,0.3)',
+               boxShadow: '0 -4px 26px rgba(0,0,0,0.7), 0 0 20px rgba(174,180,196,0.12)',
+             }}>
+          {/* 3 glows dentro de la barra */}
+          <div className="pointer-events-none absolute inset-0">
+            <div className="absolute -top-6 left-2 w-24 h-24 rounded-full" style={{ background: '#aeb4c4', filter: 'blur(24px)', opacity: 0.4 }} />
+            <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-24 h-24 rounded-full" style={{ background: '#e2e5ec', filter: 'blur(24px)', opacity: 0.26 }} />
+            <div className="absolute -top-6 right-2 w-24 h-24 rounded-full" style={{ background: '#c4bcae', filter: 'blur(24px)', opacity: 0.38 }} />
+          </div>
+
+          {navItems.map(item => (
+            <button
+              key={item.id}
+              onClick={() => router.push(`/${item.id}`)}
+              className="relative flex flex-col items-center gap-1 py-2 px-3 rounded-2xl transition-all active:scale-95"
+              style={{
+                background: item.activo ? 'rgba(74,222,128,0.16)' : 'transparent',
+                border: item.activo ? '1px solid rgba(74,222,128,0.45)' : '1px solid transparent',
+                boxShadow: item.activo ? '0 0 16px rgba(74,222,128,0.25)' : 'none',
+              }}
+            >
+              <span className="text-base">{item.icono}</span>
+              <span className="text-[10px] font-semibold"
+                    style={{ color: item.activo ? '#4ade80' : '#FAF9F5', opacity: item.activo ? 1 : 0.6 }}>
+                {item.label}
+              </span>
             </button>
           ))}
         </div>
