@@ -12,14 +12,14 @@ export default function PantallaGenerar() {
   const [error, setError] = useState('')
 
   const tipos = [
-    { id: 'desayuno',  label: 'Desayuno',  sub: 'Arranca con energía',  icono: '🍳', color: '#fff3d6', borde: '#c47c1a' },
-    { id: 'almuerzo',  label: 'Almuerzo',  sub: 'Ligero al mediodía',   icono: '🥗', color: '#eaf3de', borde: '#3d7a3d' },
-    { id: 'comida',    label: 'Comida',    sub: 'La principal del día', icono: '🍽️', color: '#d9e8c6', borde: '#2e3a23' },
-    { id: 'cena',      label: 'Cena',      sub: 'Suave por la noche',   icono: '🌙', color: '#ede0f7', borde: '#5c3d6e' },
-    { id: 'postre',    label: 'Postre',    sub: 'Dulce fit',            icono: '🍰', color: '#fdeee8', borde: '#E9967A' },
-    { id: 'snack',     label: 'Snack',     sub: 'Botana saludable',     icono: '🥜', color: '#fff0e8', borde: '#8f4c35' },
-    { id: 'gym_meal',  label: 'Gym Meal',  sub: 'Pre o post entreno',   icono: '💪', color: '#d4edda', borde: '#3d7a3d' },
-    { id: 'otro',      label: 'Otro',      sub: 'Tú me dices',          icono: '✨', color: '#f5f4f0', borde: '#75786f' },
+    { id: 'desayuno',  label: 'Desayuno',  sub: 'Arranca con energía',  icono: '🍳', color: '#fff3d6', borde: '#c47c1a', neon: '#fb923c' },
+    { id: 'almuerzo',  label: 'Almuerzo',  sub: 'Ligero al mediodía',   icono: '🥗', color: '#eaf3de', borde: '#3d7a3d', neon: '#4ade80' },
+    { id: 'comida',    label: 'Comida',    sub: 'La principal del día', icono: '🍽️', color: '#d9e8c6', borde: '#2e3a23', neon: '#a3e635' },
+    { id: 'cena',      label: 'Cena',      sub: 'Suave por la noche',   icono: '🌙', color: '#ede0f7', borde: '#5c3d6e', neon: '#a855f7' },
+    { id: 'postre',    label: 'Postre',    sub: 'Dulce fit',            icono: '🍰', color: '#fdeee8', borde: '#E9967A', neon: '#f472b6' },
+    { id: 'snack',     label: 'Snack',     sub: 'Botana saludable',     icono: '🥜', color: '#fff0e8', borde: '#8f4c35', neon: '#fb923c' },
+    { id: 'gym_meal',  label: 'Gym Meal',  sub: 'Pre o post entreno',   icono: '💪', color: '#d4edda', borde: '#3d7a3d', neon: '#22d3ee' },
+    { id: 'otro',      label: 'Otro',      sub: 'Tú me dices',          icono: '✨', color: '#f5f4f0', borde: '#75786f', neon: '#facc15' },
   ]
 
   // Burbujas difuminadas del fondo (CSS puro, decorativas)
@@ -250,63 +250,70 @@ export default function PantallaGenerar() {
       </div>
 
       <div className="relative z-10 grid grid-cols-2 gap-3 mb-5">
-        {tipos.map(t => {
+        {tipos.map((t, idx) => {
           const activo = seleccionado === t.id
           return (
-            <button
+            <div
               key={t.id}
-              onClick={() => setSeleccionado(t.id)}
-              className="flex flex-col items-start p-4 rounded-2xl text-left transition-all active:scale-98 relative"
+              className="marco-neon"
               style={{
-                background: activo
-                  ? t.color
-                  : 'linear-gradient(160deg, #39415a 0%, #262c3d 55%, #171a24 100%)',
-                border: `${activo ? 2 : 1}px solid ${activo ? t.borde : 'rgba(120,140,190,0.28)'}`,
-                boxShadow: activo ? `0 4px 16px ${t.borde}25` : '0 4px 18px rgba(0,0,0,0.5)',
-                minHeight: '110px',
-                overflow: 'hidden',
+                '--neon': t.neon,
+                animationDelay: `${idx * 0.4}s`,
+                opacity: activo ? 1 : 0.85,
               }}
             >
-              {!activo && (
-                <span className="pointer-events-none absolute inset-0">
-                  {burbujasCard.map((b, i) => (
-                    <span key={i} className="burbuja-card" style={{
-                      left: b.left, width: b.size, height: b.size, background: b.color,
-                      filter: `blur(${Math.round(b.size / 3)}px)`,
-                      animationDuration: `${b.dur}s`, animationDelay: `${b.delay}s`,
-                    }} />
-                  ))}
-                </span>
-              )}
-
-              <div
-                className="relative w-11 h-11 rounded-xl flex items-center justify-center text-xl mb-2 transition-all"
-                style={{ background: activo ? '#ffffff' : t.color, boxShadow: `0 2px 8px ${t.borde}30` }}
+              <button
+                onClick={() => setSeleccionado(t.id)}
+                className="flex flex-col items-start p-4 rounded-2xl text-left transition-all active:scale-98 relative w-full h-full"
+                style={{
+                  background: activo
+                    ? t.color
+                    : 'linear-gradient(160deg, #39415a 0%, #262c3d 55%, #171a24 100%)',
+                  minHeight: '110px',
+                  overflow: 'hidden',
+                }}
               >
-                <img
-                  src={`/icons/icon-comida-${t.id}.png`}
-                  alt={t.label}
-                  width={24}
-                  height={24}
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none'
-                    e.currentTarget.parentElement.innerHTML = `<span style="font-size:22px">${t.icono}</span>`
-                  }}
-                />
-              </div>
+                {!activo && (
+                  <span className="pointer-events-none absolute inset-0">
+                    {burbujasCard.map((b, i) => (
+                      <span key={i} className="burbuja-card" style={{
+                        left: b.left, width: b.size, height: b.size, background: b.color,
+                        filter: `blur(${Math.round(b.size / 3)}px)`,
+                        animationDuration: `${b.dur}s`, animationDelay: `${b.delay}s`,
+                      }} />
+                    ))}
+                  </span>
+                )}
 
-              <p className="relative font-semibold text-sm mb-0.5" style={{ color: activo ? '#19240f' : '#FAF9F5' }}>{t.label}</p>
-              <p className="relative text-xs leading-snug" style={{ color: activo ? '#19240f' : '#FAF9F5', opacity: 0.6 }}>{t.sub}</p>
-
-              {activo && (
                 <div
-                  className="absolute w-5 h-5 rounded-full flex items-center justify-center"
-                  style={{ background: t.borde, top: '10px', right: '10px' }}
+                  className="relative w-11 h-11 rounded-xl flex items-center justify-center text-xl mb-2 transition-all"
+                  style={{ background: activo ? '#ffffff' : t.color, boxShadow: `0 2px 8px ${t.borde}30` }}
                 >
-                  <span className="text-white text-[10px] font-bold">✓</span>
+                  <img
+                    src={`/icons/icon-comida-${t.id}.png`}
+                    alt={t.label}
+                    width={24}
+                    height={24}
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none'
+                      e.currentTarget.parentElement.innerHTML = `<span style="font-size:22px">${t.icono}</span>`
+                    }}
+                  />
                 </div>
-              )}
-            </button>
+
+                <p className="relative font-semibold text-sm mb-0.5" style={{ color: activo ? '#19240f' : '#FAF9F5' }}>{t.label}</p>
+                <p className="relative text-xs leading-snug" style={{ color: activo ? '#19240f' : '#FAF9F5', opacity: 0.6 }}>{t.sub}</p>
+
+                {activo && (
+                  <div
+                    className="absolute w-5 h-5 rounded-full flex items-center justify-center"
+                    style={{ background: t.borde, top: '10px', right: '10px' }}
+                  >
+                    <span className="text-white text-[10px] font-bold">✓</span>
+                  </div>
+                )}
+              </button>
+            </div>
           )
         })}
       </div>
@@ -396,6 +403,39 @@ export default function PantallaGenerar() {
           75%  { opacity: 0.25; }
           100% { transform: translateY(-150px); opacity: 0; }
         }
+
+        /* ✨ Línea neón que recorre el borde de cada tarjeta */
+        .marco-neon {
+          position: relative;
+          border-radius: 1rem;
+          padding: 1.5px;
+          overflow: hidden;
+          background: rgba(120,140,190,0.22);
+          transition: opacity 0.2s;
+        }
+        .marco-neon::before {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 300%;
+          aspect-ratio: 1;
+          transform: translate(-50%, -50%);
+          background: conic-gradient(
+            from 0deg,
+            transparent 0deg,
+            transparent 260deg,
+            var(--neon) 310deg,
+            #ffffff 340deg,
+            transparent 360deg
+          );
+          animation: girarMarco 4s linear infinite;
+          animation-delay: inherit;
+        }
+        @keyframes girarMarco {
+          to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
         @keyframes aparecer {
           from { opacity: 0; transform: translateY(-8px); }
           to   { opacity: 1; transform: translateY(0); }
