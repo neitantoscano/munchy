@@ -1,9 +1,10 @@
+// app/api/pago/webhook/route.js
+
 import { createAdminSupabase } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
-// Webhook de Stripe: recibe el aviso de que un pago se completó
-// y activa es_premium + premium_hasta en la tabla usuarios.
+// Webhook de Stripe: recibe los avisos de pago y activa o apaga es_premium.
 // Solo este endpoint puede escribir es_premium (usa el cliente admin).
 export async function POST(request) {
   try {
@@ -31,13 +32,12 @@ export async function POST(request) {
 
     const admin = createAdminSupabase()
 
-    // ─── Pago completado: activar premium ───
+    // ─── Pago inicial completado: activar premium ───
     if (evento.type === 'checkout.session.completed') {
       const sesion = evento.data.object
       const usuarioId = sesion.client_reference_id || sesion.metadata?.usuario_id
 
       if (usuarioId) {
-        // Premium por 30 días desde hoy.
         const hasta = new Date()
         hasta.setDate(hasta.getDate() + 30)
 
@@ -71,11 +71,19 @@ export async function POST(request) {
       }
     }
 
-    // ─── Suscripción cancelada o pago fallido: quitar premium ───
-    if (
-      evento.type === 'customer.subscription.deleted' ||
-      evento.type === 'invoice.payment_failed'
-    ) {
+    // ─── Cobro rechazado: NO se quita el premium ───
+    // Stripe reintenta el cobro varios días. Si al final se rinde,
+    // manda 'customer.subscription.deleted' y ahí sí se apaga.
+    // Solo lo dejamos anotado en los logs de Vercel.
+    if (evento.type === 'invoice.payment_failed') {
+      const factura = evento.data.object
+      console.log('COBRO_RECHAZADO:', 'customer=' + factura.customer)
+    }
+
+    // ─── Suscripción terminada: apagar premium ───
+    // Único evento que quita el Pro. Llega cuando el usuario canceló
+    // y ya se acabó su mes pagado, o cuando Stripe se rindió de cobrar.
+    if (evento.type === 'customer.subscription.deleted') {
       const objeto = evento.data.object
       const customerId = objeto.customer
 
@@ -90,6 +98,7 @@ export async function POST(request) {
     return NextResponse.json({ ok: true, recibido: true })
 
   } catch (err) {
+    console.error('Error en webhook de Stripe:', err?.message)
     return NextResponse.json({ ok: false, error: 'servidor' }, { status: 500 })
   }
 }
