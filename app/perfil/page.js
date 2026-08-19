@@ -11,6 +11,12 @@ export default function PantallaPerfil() {
   const [nuevoApodo, setNuevoApodo] = useState('')
   const [guardando, setGuardando] = useState(false)
 
+  // Cancelar Pro
+  const [confirmando, setConfirmando] = useState(false)
+  const [cancelando, setCancelando] = useState(false)
+  const [resultadoCancelar, setResultadoCancelar] = useState(null)
+  const [errorCancelar, setErrorCancelar] = useState('')
+
   const oficios = {
     estudiante: '🎓 Estudiante',
     trabajo8h: '🕐 Trabajo 8 horas',
@@ -91,6 +97,32 @@ export default function PantallaPerfil() {
     setGuardando(false)
   }
 
+  const cancelarPro = async () => {
+    if (cancelando) return
+    setCancelando(true)
+    setErrorCancelar('')
+
+    try {
+      // 🔌 BACKEND: cancela la suscripción al final del periodo pagado
+      const res = await fetch('/api/pago/cancelar', { method: 'POST' })
+      const data = await res.json()
+
+      if (data.ok) {
+        setResultadoCancelar({
+          ya_estaba: !!data.ya_estaba_cancelada,
+          hasta: data.activo_hasta || null,
+        })
+        setConfirmando(false)
+      } else {
+        if (data.error === 'sin_sesion') { router.push('/login'); return }
+        setErrorCancelar(data.mensaje || 'No pudimos cancelar. Intenta de nuevo.')
+      }
+    } catch (e) {
+      setErrorCancelar('Sin conexión. Revisa tu internet.')
+    }
+    setCancelando(false)
+  }
+
   const cerrarSesion = async () => {
     try {
       // 🔌 BACKEND: cierra sesión
@@ -108,6 +140,15 @@ export default function PantallaPerfil() {
       return d.toLocaleDateString('es-MX', { month: 'long', year: 'numeric' })
     } catch (e) {
       return '—'
+    }
+  }
+
+  const formatearDia = (iso) => {
+    if (!iso) return null
+    try {
+      return new Date(iso).toLocaleDateString('es-MX', { day: 'numeric', month: 'long' })
+    } catch (e) {
+      return null
     }
   }
 
@@ -269,10 +310,82 @@ export default function PantallaPerfil() {
 
         <button
           onClick={cerrarSesion}
-          className="w-full h-12 rounded-2xl border border-salmon/50 text-salmon text-sm font-semibold active:scale-95 transition-transform"
+          className="w-full h-12 rounded-2xl border border-salmon/50 text-salmon text-sm font-semibold active:scale-95 transition-transform mb-6"
         >
           Cerrar sesión
         </button>
+
+        {/* Cancelar Pro — solo si es Premium. Discreto, hasta abajo. */}
+        {datos.es_premium && (
+          <div className="pt-2">
+            {resultadoCancelar ? (
+              <div className="rounded-2xl p-4 text-center"
+                   style={{
+                     background: 'rgba(255,255,255,0.05)',
+                     border: '1px solid rgba(255,255,255,0.14)',
+                   }}>
+                <p className="text-sm text-crema opacity-85 leading-relaxed">
+                  {resultadoCancelar.ya_estaba
+                    ? 'Tu Pro ya estaba cancelado.'
+                    : 'Listo, cancelamos tu Pro.'}
+                  {formatearDia(resultadoCancelar.hasta) && (
+                    <> Sigues siendo Pro hasta el <span className="font-semibold text-crema">{formatearDia(resultadoCancelar.hasta)}</span>.</>
+                  )}
+                </p>
+                <p className="text-xs text-crema opacity-50 mt-2">
+                  No se te volverá a cobrar.
+                </p>
+              </div>
+            ) : confirmando ? (
+              <div className="rounded-2xl p-4"
+                   style={{
+                     background: 'rgba(255,255,255,0.05)',
+                     border: '1px solid rgba(255,255,255,0.14)',
+                   }}>
+                <p className="text-sm text-crema opacity-85 leading-relaxed mb-1">
+                  ¿Seguro que quieres cancelar?
+                </p>
+                <p className="text-xs text-crema opacity-55 leading-relaxed mb-4">
+                  Vas a perder tus 20 recetas diarias cuando termine el mes que ya pagaste.
+                </p>
+
+                {errorCancelar && (
+                  <p className="text-xs text-salmon font-medium mb-3">{errorCancelar}</p>
+                )}
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { setConfirmando(false); setErrorCancelar('') }}
+                    disabled={cancelando}
+                    className="flex-1 h-11 rounded-xl text-sm font-semibold text-crema active:scale-95 transition-transform"
+                    style={{ background: 'rgba(255,255,255,0.09)', border: '1px solid rgba(255,255,255,0.2)' }}
+                  >
+                    Mejor no
+                  </button>
+                  <button
+                    onClick={cancelarPro}
+                    disabled={cancelando}
+                    className="flex-1 h-11 rounded-xl text-sm font-semibold text-salmon active:scale-95 transition-transform"
+                    style={{
+                      background: 'transparent',
+                      border: '1px solid rgba(233,150,122,0.5)',
+                      opacity: cancelando ? 0.6 : 1,
+                    }}
+                  >
+                    {cancelando ? 'Cancelando...' : 'Sí, cancelar'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setConfirmando(true)}
+                className="w-full text-xs text-crema opacity-40 underline py-3"
+              >
+                Cancelar Munchy Pro
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       <style jsx>{`
