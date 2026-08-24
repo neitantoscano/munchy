@@ -17,6 +17,16 @@ export default function PantallaInstalar() {
     { left: '90%', size: 13, dur: 14, delay: 6,  color: '#fb923c' },
   ]
 
+  // Rayos láser que atraviesan la pantalla
+  const lasers = [
+    { top: '12%', color: '#4ade80', grosor: 3, dur: 2.6, delay: 0,   giro: -18, animacion: 'laserDer' },
+    { top: '28%', color: '#22d3ee', grosor: 2, dur: 3.4, delay: 1.2, giro: 12,  animacion: 'laserIzq' },
+    { top: '46%', color: '#a855f7', grosor: 4, dur: 2.2, delay: 2.4, giro: -8,  animacion: 'laserDer' },
+    { top: '62%', color: '#fb923c', grosor: 2, dur: 3.8, delay: 0.6, giro: 20,  animacion: 'laserIzq' },
+    { top: '78%', color: '#f472b6', grosor: 3, dur: 2.9, delay: 3.2, giro: -14, animacion: 'laserDer' },
+    { top: '90%', color: '#facc15', grosor: 2, dur: 3.1, delay: 1.8, giro: 9,   animacion: 'laserIzq' },
+  ]
+
   useEffect(() => {
     if (typeof window === 'undefined') return
 
@@ -68,11 +78,30 @@ export default function PantallaInstalar() {
   return (
     <main className="relative min-h-screen bg-black flex flex-col px-5 py-8 overflow-hidden">
 
-      {/* 🎨 Blobs neón + burbujas (decorativos, no bloquean toques) */}
+      {/* 🎨 Blobs neón + burbujas + láseres (decorativos, no bloquean toques) */}
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-        <div className="absolute -top-24 -left-20 w-72 h-72 rounded-full" style={{ background: '#4ade80', filter: 'blur(100px)', opacity: 0.32 }} />
-        <div className="absolute top-1/3 -right-24 w-80 h-80 rounded-full" style={{ background: '#a855f7', filter: 'blur(110px)', opacity: 0.34 }} />
-        <div className="absolute bottom-1/4 -left-16 w-64 h-64 rounded-full" style={{ background: '#fb923c', filter: 'blur(100px)', opacity: 0.28 }} />
+        <div className="absolute -top-24 -left-20 w-72 h-72 rounded-full" style={{ background: '#4ade80', filter: 'blur(100px)', opacity: 0.3 }} />
+        <div className="absolute top-1/3 -right-24 w-80 h-80 rounded-full" style={{ background: '#a855f7', filter: 'blur(110px)', opacity: 0.32 }} />
+        <div className="absolute bottom-1/4 -left-16 w-64 h-64 rounded-full" style={{ background: '#fb923c', filter: 'blur(100px)', opacity: 0.26 }} />
+
+        {/* ⚡ Rayos láser cruzando la pantalla */}
+        {lasers.map((l, i) => (
+          <span
+            key={i}
+            className="laser"
+            style={{
+              top: l.top,
+              height: `${l.grosor}px`,
+              background: `linear-gradient(90deg, transparent 0%, ${l.color} 35%, #ffffff 50%, ${l.color} 65%, transparent 100%)`,
+              boxShadow: `0 0 12px ${l.color}, 0 0 26px ${l.color}, 0 0 44px ${l.color}`,
+              animationName: l.animacion,
+              animationDuration: `${l.dur}s`,
+              animationDelay: `${l.delay}s`,
+              '--giro': `${l.giro}deg`,
+            }}
+          />
+        ))}
+
         {burbujas.map((b, i) => (
           <span key={i} className="burbuja" style={{
             left: b.left, width: b.size, height: b.size, background: b.color,
@@ -247,6 +276,30 @@ export default function PantallaInstalar() {
           80%  { opacity: 0.3; }
           100% { transform: translateY(-110vh); opacity: 0; }
         }
+
+        /* ⚡ Rayos láser */
+        .laser {
+          position: absolute;
+          left: 0;
+          width: 55%;
+          border-radius: 9999px;
+          opacity: 0;
+          animation-timing-function: ease-in;
+          animation-iteration-count: infinite;
+        }
+        @keyframes laserDer {
+          0%   { transform: translateX(-70%) rotate(var(--giro)); opacity: 0; }
+          10%  { opacity: 1; }
+          85%  { opacity: 1; }
+          100% { transform: translateX(250%) rotate(var(--giro)); opacity: 0; }
+        }
+        @keyframes laserIzq {
+          0%   { transform: translateX(250%) rotate(var(--giro)); opacity: 0; }
+          10%  { opacity: 1; }
+          85%  { opacity: 1; }
+          100% { transform: translateX(-70%) rotate(var(--giro)); opacity: 0; }
+        }
+
         @keyframes flotar {
           0%, 100% { transform: translateY(0); }
           50%      { transform: translateY(-6px); }
