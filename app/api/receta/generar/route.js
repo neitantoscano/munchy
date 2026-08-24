@@ -1,9 +1,9 @@
 // app/api/receta/generar/route.js
 // Endpoint principal de B7: genera (o reutiliza) una receta saludable.
-// Flujo: sesión → ingredientes → caché → (IA si no hay) → guardar → devolver.
+// Flujo: sesión → perfil → ingredientes → caché → (IA si no hay) → guardar → devolver.
 
 import { createServerSupabase } from '@/lib/supabase-server'
-import { generarHashCache } from '@/lib/cache-hash'
+import { generarHashCache, calcularPerfilPorcion } from '@/lib/cache-hash'
 import { incrementarContadorReceta } from '@/lib/rachas'
 import Anthropic from '@anthropic-ai/sdk'
 import { NextResponse } from 'next/server'
@@ -25,6 +25,9 @@ const TIPOS_VALIDOS = [
   'desayuno', 'almuerzo', 'comida', 'cena',
   'postre', 'snack', 'gym_meal', 'otro'
 ]
+
+// Tipos que NO son plato completo (no llevan proteína + carbo + verdura)
+const TIPOS_SUELTOS = ['postre', 'snack']
 
 // ─── Helper de fecha (México UTC-6) para el límite diario ───
 function fechaMexico() {
@@ -79,10 +82,10 @@ export async function POST(request) {
       )
     }
 
-    // 3. Leer datos del usuario (premium + contador)
+    // 3. Leer datos del usuario (premium + contador + perfil)
     const { data: usuario, error: errUsuario } = await supabase
       .from('usuarios')
-      .select('es_premium, recetas_hoy, fecha_contador')
+      .select('es_premium, recetas_hoy, fecha_contador, oficio, nivel_ejercicio')
       .eq('id', user.id)
       .single()
 
@@ -101,6 +104,10 @@ export async function POST(request) {
 
     // Límite que aplica según el plan
     const limiteDelUsuario = usuario.es_premium ? LIMITE_PRO : LIMITE_FREE
+
+    // Perfil de porción: agrupa oficio + ejercicio en ligero / normal / alto.
+    // Solo 3 grupos para que el caché siga sirviendo.
+    const perfilPorcion = calcularPerfilPorcion(usuario.oficio, usuario.nivel_ejercicio)
 
     // 4. Leer alergias del usuario
     const { data: alergiasData } = await supabase
@@ -129,7 +136,7 @@ export async function POST(request) {
     }
 
     // 6. Generar el hash y buscar en caché
-    const hash = generarHashCache(ingredientesDisponibles, tipoComida)
+    const hash = generarHashCache(ingredientesDisponibles, tipoComida, perfilPorcion)
 
     const { data: cacheHit } = await supabase
       .from('recetas_cache')
@@ -174,7 +181,8 @@ export async function POST(request) {
         textoLibre,
         estilo,
         ingredientes: ingredientesDisponibles,
-        alergias
+        alergias,
+        perfilPorcion
       })
 
       if (!recetaIA) {
@@ -197,15 +205,20 @@ export async function POST(request) {
 
       recetaFinal = recetaIA
 
-      // Guardar en caché (compartida para todos)
+      // Guardar en caché (compartida para todos).
+      // upsert: si ya existía ese hash (porque se descartó por alergia),
+      // se sobrescribe en vez de fallar.
       await supabase
         .from('recetas_cache')
-        .insert({
-          ingredientes_hash: hash,
-          tipo_comida: tipoComida,
-          receta_completa: recetaFinal,
-          veces_usada: 1
-        })
+        .upsert(
+          {
+            ingredientes_hash: hash,
+            tipo_comida: tipoComida,
+            receta_completa: recetaFinal,
+            veces_usada: 1
+          },
+          { onConflict: 'ingredientes_hash' }
+        )
 
       // Subir el contador diario del usuario (solo cuando se usó IA)
       await incrementarContadorReceta(supabase, user.id)
@@ -277,13 +290,37 @@ export async function POST(request) {
 // Llamada a la IA (Claude Haiku) que crea la receta.
 // Devuelve el objeto receta ya parseado, o null si falla.
 // ════════════════════════════════════════════
-async function generarConIA({ tipoComida, textoLibre, estilo, ingredientes, alergias }) {
+async function generarConIA({ tipoComida, textoLibre, estilo, ingredientes, alergias, perfilPorcion }) {
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
   const listaIngredientes = ingredientes.join(', ')
   const listaAlergias = alergias && alergias.length > 0 ? alergias.join(', ') : 'ninguna'
   const pedidoLibre = tipoComida === 'otro' && textoLibre
     ? `El usuario pidió específicamente: "${textoLibre}".`
+    : ''
+
+  // Instrucción de porción según el perfil del usuario
+  const guiaPorcion = {
+    ligero: 'Persona sedentaria. Porciones moderadas, menos carbohidrato, más verdura. Alrededor de 350-450 kcal por porción.',
+    normal: 'Persona con actividad media. Porciones equilibradas. Alrededor de 450-600 kcal por porción.',
+    alto: 'Persona muy activa o que entrena fuerte. Porciones generosas, más proteína y más carbohidrato. Alrededor de 600-800 kcal por porción.'
+  }[perfilPorcion] || 'Porciones equilibradas. Alrededor de 450-600 kcal por porción.'
+
+  // Los snacks y postres no son plato completo
+  const esPlatoCompleto = !TIPOS_SUELTOS.includes(tipoComida)
+
+  const reglaPlato = esPlatoCompleto
+    ? `═══ SIEMPRE PLATO COMPLETO ═══
+Esta receta debe ser un PLATO ARMADO, no un solo elemento suelto.
+Todo plato principal lleva estos 3 componentes:
+1. PROTEÍNA (pollo, pescado, huevo, carne, atún, frijoles, requesón)
+2. CARBOHIDRATO (papa, arroz, tortilla, pasta, camote, avena, pan integral)
+3. VEGETAL (ensalada, verdura salteada, asada o al horno)
+Más un toque final: limón, salsa, aderezo o hierbas frescas.
+
+Piensa en un plato de restaurante: filete dorado + papas cambray al ajillo + ensalada con aderezo + rodaja de limón.
+Los 3 componentes van en la MISMA lista de ingredientes y en los MISMOS pasos.
+Si un componente se cocina mientras otro reposa, dilo en el paso (ej. "mientras las papas hierven...").`
     : ''
 
   const sistema = `Eres el chef de Munchy, una app de recetas saludables para la Gen Z mexicana.
@@ -297,6 +334,8 @@ PROHIBIDO servir como plato principal:
 - Pechuga hervida con verdura al vapor.
 - Cualquier cosa sin sazón, sin salsa, sin gracia.
 
+${reglaPlato}
+
 SÍ hacemos comida rica que además es saludable. Ejemplos del nivel que buscamos:
 - Tacos usando hoja de lechuga como tortilla, con carne, salsa, aderezo y limón.
 - Ensaladas mezcladas con aderezo cremoso hecho con yogur griego, no secas.
@@ -304,7 +343,8 @@ SÍ hacemos comida rica que además es saludable. Ejemplos del nivel que buscamo
 - Bowls con capas: base, proteína, algo crujiente, salsa encima.
 
 REGLA DE ORO: toda receta lleva SABOR — aderezo, salsa, marinada o especias.
-El aderezo cremoso se hace saludable con yogur griego, aguacate o requesón sino solo un poco de mayonesa o kepchupt natural o de marca.
+Para aderezos cremosos usa yogur griego, aguacate o requesón como base.
+Si la receta necesita mayonesa o kétchup, usa muy poca cantidad.
 
 SNACKS: que se antojen de verdad. Nada de "un puño de almendras" o "zanahoria cruda".
 Piensa: papas al horno con especias, palomitas sazonadas, hummus con algo crujiente, rollitos, brochetas.
@@ -313,54 +353,4 @@ POSTRES: que sepan a postre real, no a castigo. Nada de "una fruta y ya".
 Piensa: mousse de yogur griego con cacao, nice cream de plátano, avena horneada tipo brownie, fresas con crema de verdad.
 Se endulza con dátil, plátano, miel o canela en vez de azúcar refinada.
 
-Saludable Gen Z = papas al horno SÍ, Takis NO. Ingredientes reales, buen sabor, cero comida chatarra.
-
-Estilo "${estilo}": si es "moderna", recetas estilo TikTok, virales y con presentación llamativa; si es "clasica", recetas tradicionales mexicanas en versión saludable pero sin perder el sabor de siempre.
-
-Sugiere 1 o 2 ingredientes "Nivel Pro" que suban la receta de nivel.
-
-REGLAS ESTRICTAS:
-- NUNCA uses estos ingredientes (alergias del usuario): ${listaAlergias}.
-- Usa principalmente los ingredientes disponibles. Puedes asumir básicos comunes (sal, aceite, especias, limón, ajo).
-- Las instrucciones deben tener entre 4 y 6 pasos.
-- CADA paso debe tener aproximadamente 33 palabras (dos oraciones): la primera dice qué hacer, la segunda da un detalle útil, tip o punto a cuidar. Ni muy corto ni un párrafo largo.
-- Responde SOLO con un objeto JSON válido. Sin texto antes ni después. Sin backticks. Sin markdown.
-
-FORMATO EXACTO del JSON:
-{
-  "titulo": "string corto y antojable",
-  "emoji": "un solo emoji",
-  "estilo": "${estilo}",
-  "tiempo_minutos": numero,
-  "porciones": numero,
-  "descripcion": "string de 1 linea",
-  "ingredientes": [{ "nombre": "string", "cantidad": "string con unidad, ej: 2 tazas" }],
-  "ingredientes_pro": [{ "nombre": "string", "cantidad": "string", "razon": "por que sube nivel" }],
-  "instrucciones": ["paso de ~33 palabras", "paso de ~33 palabras"],
-  "macros": { "proteina_g": numero, "carbos_g": numero, "grasas_g": numero, "calorias": numero, "azucar_g": numero, "fibra_g": numero, "sodio_mg": numero }
-}`
-
-  const usuario = `Crea una receta de tipo "${tipoComida}".
-Ingredientes disponibles: ${listaIngredientes}.
-${pedidoLibre}`
-
-  try {
-    const respuesta = await anthropic.messages.create({
-      model: MODELO,
-      max_tokens: 2000,
-      system: sistema,
-      messages: [{ role: 'user', content: usuario }]
-    })
-
-    const bloqueTexto = respuesta.content.find((b) => b.type === 'text')
-    if (!bloqueTexto) return null
-
-    let texto = bloqueTexto.text.trim()
-    texto = texto.replace(/```json/g, '').replace(/```/g, '').trim()
-
-    return JSON.parse(texto)
-
-  } catch (err) {
-    return null
-  }
-}
+Saludable Gen Z = papas al horno SÍ, Takis NO.
