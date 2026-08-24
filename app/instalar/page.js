@@ -84,10 +84,13 @@ export default function PantallaInstalar() {
 
       {/* Encabezado */}
       <div className="relative z-10 flex flex-col items-center text-center pt-6 pb-8">
-        <div className="w-24 h-24 rounded-3xl bg-olivo flex items-center justify-center text-5xl mb-5"
-             style={{ animation: 'flotar 3s ease-in-out infinite', boxShadow: '0 0 30px rgba(74,222,128,0.35)', border: '1px solid rgba(255,255,255,0.14)' }}>
-          <img src="/icons/munchy-192.png" alt="Munchy" width={64} height={64}
-               onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement.innerHTML = '<span style="font-size:44px">🥗</span>' }} />
+        {/* Logo con borde neón que gira */}
+        <div className="marco-logo mb-5" style={{ animation: 'flotar 3s ease-in-out infinite' }}>
+          <div className="w-24 h-24 rounded-[22px] flex items-center justify-center relative z-10 overflow-hidden"
+               style={{ background: 'linear-gradient(160deg, #1c2a1c 0%, #0f1410 100%)' }}>
+            <img src="/icons/munchy-192.png" alt="Munchy" width={72} height={72}
+                 onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement.innerHTML = '<span style="font-size:44px">🥗</span>' }} />
+          </div>
         </div>
 
         <h1 className="font-serif text-4xl text-crema leading-tight mb-3">
@@ -248,6 +251,39 @@ export default function PantallaInstalar() {
           0%, 100% { transform: translateY(0); }
           50%      { transform: translateY(-6px); }
         }
+
+        /* Marco del logo con línea neón girando */
+        .marco-logo {
+          position: relative;
+          border-radius: 26px;
+          padding: 3px;
+          overflow: hidden;
+          background: rgba(255,255,255,0.08);
+          box-shadow: 0 0 34px rgba(74,222,128,0.22);
+        }
+        .marco-logo::before {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 320%;
+          aspect-ratio: 1;
+          transform: translate(-50%, -50%);
+          background: conic-gradient(
+            from 0deg,
+            transparent 0deg,
+            #4ade80 60deg,
+            #22d3ee 130deg,
+            #a855f7 200deg,
+            #fb923c 270deg,
+            transparent 340deg
+          );
+          animation: girarLogo 3.5s linear infinite;
+        }
+        @keyframes girarLogo {
+          to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
         .borde-vivo {
           position: relative;
           border-radius: 1rem;
