@@ -1,6 +1,6 @@
 // app/api/receta/confirmar-cocina/route.js
 // POST: el usuario confirma que cocinó la receta ("Ya cociné esto 🔥").
-// 1. Sube la racha. 2. Quita de la despensa los ingredientes usados.
+// 1. Marca la fecha de cocinado. 2. Sube la racha. 3. Quita ingredientes de la despensa.
 
 import { createServerSupabase } from '@/lib/supabase-server'
 import { actualizarRachaPorCocina } from '@/lib/rachas'
@@ -42,13 +42,23 @@ export async function POST(request) {
       )
     }
 
-    // 2. Subir la racha 🔥 (lo más importante)
+    // 2. Marcar la fecha en que se cocinó.
+    //    Solo si estaba vacía: si ya se cocinó antes, se respeta la fecha original.
+    //    Best-effort: si falla, no rompemos la racha.
+    await supabase
+      .from('recetas_generadas')
+      .update({ cocinada_en: new Date().toISOString() })
+      .eq('id', recetaId)
+      .eq('usuario_id', user.id)
+      .is('cocinada_en', null)
+
+    // 3. Subir la racha 🔥 (lo más importante)
     const resultadoRacha = await actualizarRachaPorCocina(supabase, user.id)
     if (!resultadoRacha.ok) {
       return NextResponse.json(resultadoRacha, { status: 500 })
     }
 
-    // 3. Restar de la despensa los ingredientes usados (si los tenía).
+    // 4. Restar de la despensa los ingredientes usados (si los tenía).
     //    Si la receta fue de básicos universales, no habrá coincidencias.
     const nombresReceta = (receta.ingredientes || [])
       .map((i) => String(i.nombre || '').toLowerCase().trim())
@@ -78,7 +88,7 @@ export async function POST(request) {
       }
     }
 
-    // 4. Devolver la racha con la forma exacta que espera el frontend
+    // 5. Devolver la racha con la forma exacta que espera el frontend
     return NextResponse.json({
       ok: true,
       racha_nueva: resultadoRacha.racha_nueva,
