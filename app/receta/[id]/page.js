@@ -273,7 +273,7 @@ export default function PantallaReceta({ params }) {
             <div className="bg-salmonLight rounded-2xl p-4 border border-salmon/30">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-cafeTierra">
-                  ✨ Nivel Pro
+                  ✨ Complementos extras
                 </span>
                 <span className="text-xs text-olivoOscuro opacity-50">(opcional)</span>
               </div>
