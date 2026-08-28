@@ -1,7 +1,10 @@
 // app/api/receta/confirmar-cocina/route.js
 // POST: el usuario confirma que cocinó la receta ("Ya cociné esto 🔥").
-// 1. Anota la cocinada en la tabla 'cocinadas'. 2. Sube la racha. 3. Resta despensa.
+// 1. Anota la cocinada. 2. Sube la racha. 3. Quita SOLO lo que el usuario aprobó.
 // Se puede cocinar la MISMA receta varias veces: cada vez es un renglón nuevo.
+//
+// Body: { receta_id, quitar_despensa: [id1, id2, ...] }
+// Si 'quitar_despensa' no llega o llega vacío, NO se quita nada de la despensa.
 
 import { createServerSupabase } from '@/lib/supabase-server'
 import { actualizarRachaPorCocina } from '@/lib/rachas'
@@ -28,10 +31,16 @@ export async function POST(request) {
       )
     }
 
-    // 1. Traer la receta y confirmar que es del usuario
+    // Lista de ids de despensa que el usuario aprobó quitar.
+    // Si no llega, no se quita nada (más seguro que adivinar).
+    const quitarDespensa = Array.isArray(body.quitar_despensa)
+      ? body.quitar_despensa.filter((id) => typeof id === 'string' && id.trim() !== '')
+      : []
+
+    // 1. Confirmar que la receta existe y es del usuario
     const { data: receta, error: errReceta } = await supabase
       .from('recetas_generadas')
-      .select('ingredientes')
+      .select('id')
       .eq('id', recetaId)
       .eq('usuario_id', user.id)
       .single()
@@ -66,33 +75,20 @@ export async function POST(request) {
       return NextResponse.json(resultadoRacha, { status: 500 })
     }
 
-    // 4. Restar de la despensa los ingredientes usados (si los tenía).
-    //    Si la receta fue de básicos universales, no habrá coincidencias.
-    const nombresReceta = (receta.ingredientes || [])
-      .map((i) => String(i.nombre || '').toLowerCase().trim())
-      .filter((n) => n !== '')
-
-    if (nombresReceta.length > 0) {
-      const { data: despensa } = await supabase
+    // 4. Quitar de la despensa SOLO lo que el usuario aprobó.
+    //    El .eq('usuario_id') evita que alguien borre despensa ajena.
+    let quitados = 0
+    if (quitarDespensa.length > 0) {
+      const { data: borrados, error: errBorrar } = await supabase
         .from('despensa')
-        .select('id, nombre_ingrediente')
+        .delete()
+        .in('id', quitarDespensa)
         .eq('usuario_id', user.id)
+        .select('id')
 
-      const idsAEliminar = (despensa || [])
-        .filter((item) => {
-          const nom = String(item.nombre_ingrediente || '').toLowerCase().trim()
-          if (!nom) return false
-          // Coincide si un nombre contiene al otro (jitomate ≈ jitomate bola)
-          return nombresReceta.some((r) => nom.includes(r) || r.includes(nom))
-        })
-        .map((item) => item.id)
-
-      if (idsAEliminar.length > 0) {
-        // Best-effort: si falla, no rompemos la racha ya lograda
-        await supabase
-          .from('despensa')
-          .delete()
-          .in('id', idsAEliminar)
+      // Best-effort: si falla, no rompemos la racha ya lograda
+      if (!errBorrar) {
+        quitados = (borrados || []).length
       }
     }
 
@@ -100,7 +96,8 @@ export async function POST(request) {
     return NextResponse.json({
       ok: true,
       racha_nueva: resultadoRacha.racha_nueva,
-      racha_nueva_record: resultadoRacha.racha_nueva_record
+      racha_nueva_record: resultadoRacha.racha_nueva_record,
+      ingredientes_quitados: quitados
     })
 
   } catch (err) {
