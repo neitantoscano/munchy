@@ -1,3 +1,6 @@
+// app/api/casa/resumen/route.js
+// GET: datos de la pantalla de casa (racha, límite diario, despensa, frases).
+
 import { createServerSupabase } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 
@@ -56,12 +59,26 @@ export async function GET() {
 
     // 3. Calcular la racha real (con conciencia de fecha)
     let racha_dias = perfil.racha_dias || 0
+    let rachaSeRompio = false
+
     if (racha_dias > 0 && perfil.ultima_visita) {
       const ultima = String(perfil.ultima_visita).substring(0, 10)
       const dias = diferenciaDias(ultima, hoy)
       if (dias > 1) {
         racha_dias = 0
+        rachaSeRompio = true
       }
+    }
+
+    // 3b. Si la racha se rompió, GUARDARLO en la base de datos.
+    //     Sin esto, la pantalla mostraba 0 pero la base decía otra cosa,
+    //     y el perfil enseñaba un número distinto al de casa.
+    //     racha_record NO se toca: el récord histórico se conserva.
+    if (rachaSeRompio) {
+      await supabase
+        .from('usuarios')
+        .update({ racha_dias: 0 })
+        .eq('id', user.id)
     }
 
     // 4. Contar ingredientes en la despensa
