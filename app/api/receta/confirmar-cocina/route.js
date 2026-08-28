@@ -1,6 +1,7 @@
 // app/api/receta/confirmar-cocina/route.js
 // POST: el usuario confirma que cocinó la receta ("Ya cociné esto 🔥").
-// 1. Marca la fecha de cocinado. 2. Sube la racha. 3. Quita ingredientes de la despensa.
+// 1. Anota la cocinada en la tabla 'cocinadas'. 2. Sube la racha. 3. Resta despensa.
+// Se puede cocinar la MISMA receta varias veces: cada vez es un renglón nuevo.
 
 import { createServerSupabase } from '@/lib/supabase-server'
 import { actualizarRachaPorCocina } from '@/lib/rachas'
@@ -27,7 +28,7 @@ export async function POST(request) {
       )
     }
 
-    // 1. Traer la receta (para saber qué ingredientes usó)
+    // 1. Traer la receta y confirmar que es del usuario
     const { data: receta, error: errReceta } = await supabase
       .from('recetas_generadas')
       .select('ingredientes')
@@ -42,17 +43,24 @@ export async function POST(request) {
       )
     }
 
-    // 2. Marcar la fecha en que se cocinó.
-    //    Solo si estaba vacía: si ya se cocinó antes, se respeta la fecha original.
-    //    Best-effort: si falla, no rompemos la racha.
-    await supabase
-      .from('recetas_generadas')
-      .update({ cocinada_en: new Date().toISOString() })
-      .eq('id', recetaId)
-      .eq('usuario_id', user.id)
-      .is('cocinada_en', null)
+    // 2. Anotar la cocinada. Un renglón nuevo cada vez.
+    //    Es lo que alimenta el menú de la semana.
+    const { error: errCocinada } = await supabase
+      .from('cocinadas')
+      .insert({
+        usuario_id: user.id,
+        receta_id: recetaId
+      })
 
-    // 3. Subir la racha 🔥 (lo más importante)
+    if (errCocinada) {
+      return NextResponse.json(
+        { ok: false, error: 'registrar_fallo', mensaje: 'No pudimos registrar tu platillo' },
+        { status: 500 }
+      )
+    }
+
+    // 3. Subir la racha 🔥
+    //    Solo sube una vez al día, aunque cocines varias recetas.
     const resultadoRacha = await actualizarRachaPorCocina(supabase, user.id)
     if (!resultadoRacha.ok) {
       return NextResponse.json(resultadoRacha, { status: 500 })
