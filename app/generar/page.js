@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 export default function PantallaGenerar() {
   const router = useRouter()
   const [seleccionado, setSeleccionado] = useState(null)
+  const [porciones, setPorciones] = useState(2)
   const [textoLibre, setTextoLibre] = useState('')
   const [cargando, setCargando] = useState(false)
   const [mensajeIdx, setMensajeIdx] = useState(0)
@@ -20,6 +21,13 @@ export default function PantallaGenerar() {
     { id: 'snack',     label: 'Snack',     sub: 'Botana saludable',     icono: '🥜', color: '#fff0e8', borde: '#8f4c35', neon: '#fb923c' },
     { id: 'gym_meal',  label: 'Gym Meal',  sub: 'Pre o post entreno',   icono: '💪', color: '#d4edda', borde: '#3d7a3d', neon: '#22d3ee' },
     { id: 'otro',      label: 'Otro',      sub: 'Tú me dices',          icono: '✨', color: '#f5f4f0', borde: '#75786f', neon: '#facc15' },
+  ]
+
+  // Solo 1, 2 y 4. Cada opción parte el caché, no agregar más sin hablarlo con backend.
+  const opcionesPorciones = [
+    { valor: 1, label: 'Solo yo',  sub: '1 porción'  },
+    { valor: 2, label: 'Para dos', sub: '2 porciones' },
+    { valor: 4, label: 'Familiar', sub: '4 porciones' },
   ]
 
   // Burbujas difuminadas del fondo (CSS puro, decorativas)
@@ -73,7 +81,7 @@ export default function PantallaGenerar() {
     setCargando(true)
     setError('')
 
-    const body = { tipo_comida: seleccionado }
+    const body = { tipo_comida: seleccionado, porciones }
     if (seleccionado === 'otro') {
       body.texto_libre = textoLibre.trim()
     }
@@ -249,7 +257,7 @@ export default function PantallaGenerar() {
         </p>
       </div>
 
-      <div className="relative z-10 grid grid-cols-2 gap-3 mb-5">
+      <div className="relative z-10 grid grid-cols-2 gap-3 mb-6">
         {tipos.map((t, idx) => {
           const activo = seleccionado === t.id
           return (
@@ -316,6 +324,42 @@ export default function PantallaGenerar() {
             </div>
           )
         })}
+      </div>
+
+      {/* Selector de porciones */}
+      <div className="relative z-10 mb-6">
+        <p className="text-xs font-bold uppercase tracking-wider text-salmon mb-3">
+          ¿Para cuántos?
+        </p>
+        <div className="flex gap-2">
+          {opcionesPorciones.map((p, idx) => {
+            const activo = porciones === p.valor
+            return (
+              <div
+                key={p.valor}
+                className="marco-plata flex-1"
+                style={{ animationDelay: `${idx * 0.5}s` }}
+              >
+                <button
+                  onClick={() => setPorciones(p.valor)}
+                  className="w-full rounded-2xl py-3 px-2 text-center active:scale-95 transition-all relative"
+                  style={{
+                    background: activo
+                      ? 'rgba(34,211,238,0.16)'
+                      : 'linear-gradient(160deg, #2b3244 0%, #1b1f2b 100%)',
+                  }}
+                >
+                  <p className="text-sm font-bold" style={{ color: activo ? '#22d3ee' : '#FAF9F5' }}>
+                    {p.label}
+                  </p>
+                  <p className="text-[10px] mt-0.5" style={{ color: activo ? '#22d3ee' : '#FAF9F5', opacity: activo ? 0.85 : 0.5 }}>
+                    {p.sub}
+                  </p>
+                </button>
+              </div>
+            )
+          })}
+        </div>
       </div>
 
       {seleccionado === 'otro' && (
@@ -433,6 +477,37 @@ export default function PantallaGenerar() {
           animation-delay: inherit;
         }
         @keyframes girarMarco {
+          to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        /* ✨ Línea gris-blanca para los botones de porciones */
+        .marco-plata {
+          position: relative;
+          border-radius: 1rem;
+          padding: 1.5px;
+          overflow: hidden;
+          background: rgba(255,255,255,0.14);
+        }
+        .marco-plata::before {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 320%;
+          aspect-ratio: 1;
+          transform: translate(-50%, -50%);
+          background: conic-gradient(
+            from 0deg,
+            transparent 0deg,
+            transparent 250deg,
+            rgba(200,205,215,0.9) 305deg,
+            #ffffff 335deg,
+            transparent 360deg
+          );
+          animation: girarPlata 3.6s linear infinite;
+          animation-delay: inherit;
+        }
+        @keyframes girarPlata {
           to { transform: translate(-50%, -50%) rotate(360deg); }
         }
 
