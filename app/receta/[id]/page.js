@@ -11,6 +11,14 @@ export default function PantallaReceta({ params }) {
   const [cocinando, setCocinando] = useState(false)
   const [confetti, setConfetti] = useState(false)
   const [rachaNueva, setRachaNueva] = useState(null)
+  const [esRecord, setEsRecord] = useState(false)
+
+  // Modal de despensa
+  const [candidatos, setCandidatos] = useState([])
+  const [seleccionados, setSeleccionados] = useState([])
+  const [mostrandoModal, setMostrandoModal] = useState(false)
+  const [procesando, setProcesando] = useState(false)
+  const [errorModal, setErrorModal] = useState('')
 
   // Burbujas difuminadas del fondo (CSS puro, decorativas)
   const burbujas = [
@@ -69,13 +77,15 @@ export default function PantallaReceta({ params }) {
     }
   }
 
+  // Paso 1: pregunta qué ingredientes de la despensa coinciden
   const handleCocine = async () => {
-    if (cocinando) return
+    if (cocinando || procesando) return
     setCocinando(true)
+    setErrorModal('')
 
     try {
-      // 🔌 BACKEND: confirma que cocinó → sube racha + descuenta despensa
-      const res = await fetch('/api/receta/confirmar-cocina', {
+      // 🔌 BACKEND: consulta candidatos (NO borra nada)
+      const res = await fetch('/api/receta/preparar-cocina', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ receta_id: params.id }),
@@ -84,14 +94,75 @@ export default function PantallaReceta({ params }) {
       const data = await res.json()
 
       if (data.ok) {
-        setRachaNueva(data.racha_nueva)
-        setConfetti(true)
-      } else {
+        const lista = data.candidatos || []
+
+        // Sin candidatos: no molestamos al usuario, registramos directo
+        if (lista.length === 0) {
+          await registrarCocina([])
+          return
+        }
+
+        setCandidatos(lista)
+        setSeleccionados(lista.map(c => c.id)) // todos palomeados
+        setMostrandoModal(true)
         setCocinando(false)
+      } else {
+        if (data.error === 'sesion_no_encontrada') { router.push('/bienvenida'); return }
+        // Si falla la consulta, igual dejamos registrar sin tocar despensa
+        await registrarCocina([])
       }
     } catch (e) {
       setCocinando(false)
+      setErrorModal('Sin conexión. Revisa tu internet.')
     }
+  }
+
+  // Paso 2: registra la cocinada con lo que el usuario aprobó
+  const registrarCocina = async (idsAQuitar) => {
+    if (procesando) return
+    setProcesando(true)
+    setErrorModal('')
+
+    try {
+      // 🔌 BACKEND: sube racha + quita SOLO lo aprobado
+      const res = await fetch('/api/receta/confirmar-cocina', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ receta_id: params.id, quitar_despensa: idsAQuitar }),
+      })
+
+      const data = await res.json()
+
+      if (data.ok) {
+        setRachaNueva(data.racha_nueva)
+        setEsRecord(!!data.racha_nueva_record)
+        setMostrandoModal(false)
+        setConfetti(true)
+      } else {
+        if (data.error === 'sesion_no_encontrada') { router.push('/bienvenida'); return }
+        setErrorModal(data.mensaje || 'No pudimos registrarlo. Intenta de nuevo.')
+        setProcesando(false)
+        setCocinando(false)
+      }
+    } catch (e) {
+      setErrorModal('Sin conexión. Revisa tu internet.')
+      setProcesando(false)
+      setCocinando(false)
+    }
+  }
+
+  const toggleIngrediente = (id) => {
+    if (procesando) return
+    setSeleccionados(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    )
+  }
+
+  const cerrarModal = () => {
+    if (procesando) return
+    setMostrandoModal(false)
+    setCocinando(false)
+    setErrorModal('')
   }
 
   if (error) {
@@ -128,24 +199,28 @@ export default function PantallaReceta({ params }) {
     return (
       <main className="min-h-screen bg-black flex flex-col items-center justify-center px-5 py-8 relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
-          {[...Array(20)].map((_, i) => (
+          {[...Array(esRecord ? 30 : 20)].map((_, i) => (
             <span key={i} className="absolute text-2xl"
                   style={{
                     left: `${Math.random()*100}%`,
                     top: `-10%`,
                     animation: `caer ${2 + Math.random()*2}s ease-in ${Math.random()*0.5}s infinite`,
                   }}>
-              {['🔥','✨','🎉','🥗'][i%4]}
+              {esRecord ? ['🏆','🔥','✨','🎉'][i%4] : ['🔥','✨','🎉','🥗'][i%4]}
             </span>
           ))}
         </div>
 
-        <div className="text-7xl mb-4">🔥</div>
+        <div className="text-7xl mb-4">{esRecord ? '🏆' : '🔥'}</div>
         <h1 className="font-serif text-3xl text-crema text-center mb-2">
-          {rachaNueva ? `¡${rachaNueva} días seguidos!` : '¡Receta cocinada!'}
+          {esRecord
+            ? '¡Nuevo récord!'
+            : rachaNueva ? `¡${rachaNueva} días seguidos!` : '¡Receta cocinada!'}
         </h1>
         <p className="text-base text-crema opacity-70 text-center max-w-xs mb-8">
-          La despensa se actualizó y tu racha sigue viva, <span className="font-semibold">campeón</span>.
+          {esRecord
+            ? `${rachaNueva} días seguidos, nunca habías llegado tan lejos. 🔥`
+            : 'La despensa se actualizó y tu racha sigue viva, campeón.'}
         </p>
 
         <button
@@ -315,6 +390,9 @@ export default function PantallaReceta({ params }) {
 
       <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md px-5 pb-4 pt-3 z-50"
            style={{ background: 'linear-gradient(to top, rgba(0,0,0,1) 70%, rgba(0,0,0,0))' }}>
+        {errorModal && !mostrandoModal && (
+          <p className="text-xs text-salmon font-medium text-center mb-2">{errorModal}</p>
+        )}
         <div className="flex gap-3">
           <button
             onClick={toggleGuardar}
@@ -330,18 +408,111 @@ export default function PantallaReceta({ params }) {
 
           <button
             onClick={handleCocine}
-            disabled={cocinando}
+            disabled={cocinando || procesando}
             className="flex-1 h-14 bg-olivo text-white rounded-2xl font-semibold text-sm tracking-wide flex items-center justify-center gap-2 active:scale-95 transition-all"
             style={{
               boxShadow: '0 0 24px rgba(74,222,128,0.35)',
               border: '1px solid rgba(255,255,255,0.14)',
-              opacity: cocinando ? 0.7 : 1,
+              opacity: (cocinando || procesando) ? 0.7 : 1,
             }}
           >
-            {cocinando ? '🔥 Sumando a tu racha...' : '✓ Ya cociné esto 🔥'}
+            {(cocinando || procesando) ? '🔥 Un momento...' : '✓ Ya cociné esto 🔥'}
           </button>
         </div>
       </div>
+
+      {/* Modal: ¿qué gastaste? */}
+      {mostrandoModal && (
+        <>
+          <div
+            className="fixed inset-0 z-[90]"
+            style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }}
+            onClick={cerrarModal}
+          />
+
+          <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md z-[95] px-4 pb-4"
+               style={{ animation: 'subirModal 0.28s ease-out' }}>
+            <div className="rounded-3xl p-5"
+                 style={{
+                   background: 'linear-gradient(160deg, #39415a 0%, #262c3d 55%, #171a24 100%)',
+                   border: '1px solid rgba(120,140,190,0.35)',
+                   boxShadow: '0 -8px 40px rgba(0,0,0,0.8)',
+                 }}>
+              <div className="w-10 h-1 rounded-full mx-auto mb-4" style={{ background: 'rgba(255,255,255,0.2)' }} />
+
+              <h2 className="font-serif text-2xl text-crema mb-1">¿Qué gastaste?</h2>
+              <p className="text-sm text-crema opacity-60 mb-5 leading-relaxed">
+                Destilda lo que te haya sobrado. Solo quitamos de tu despensa lo que dejes palomeado.
+              </p>
+
+              <div className="flex flex-col gap-2 mb-5 overflow-y-auto" style={{ maxHeight: '42vh' }}>
+                {candidatos.map(c => {
+                  const activo = seleccionados.includes(c.id)
+                  return (
+                    <button
+                      key={c.id}
+                      onClick={() => toggleIngrediente(c.id)}
+                      className="flex items-center gap-3 p-4 rounded-2xl text-left active:scale-98 transition-all"
+                      style={{
+                        background: activo ? 'rgba(74,222,128,0.12)' : 'rgba(255,255,255,0.04)',
+                        border: `1px solid ${activo ? 'rgba(74,222,128,0.45)' : 'rgba(255,255,255,0.12)'}`,
+                      }}
+                    >
+                      <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 transition-all"
+                           style={{
+                             background: activo ? '#4ade80' : 'transparent',
+                             border: `2px solid ${activo ? '#4ade80' : 'rgba(255,255,255,0.3)'}`,
+                           }}>
+                        {activo && <span className="text-black text-xs font-bold">✓</span>}
+                      </div>
+                      <span className="flex-1 text-sm font-medium"
+                            style={{ color: '#FAF9F5', opacity: activo ? 1 : 0.5 }}>
+                        {c.nombre}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+
+              {errorModal && (
+                <p className="text-xs text-salmon font-medium text-center mb-3">{errorModal}</p>
+              )}
+
+              <div className="flex gap-3">
+                <button
+                  onClick={cerrarModal}
+                  disabled={procesando}
+                  className="h-13 px-5 rounded-2xl text-sm font-semibold text-crema active:scale-95 transition-transform"
+                  style={{
+                    height: '52px',
+                    background: 'rgba(255,255,255,0.08)',
+                    border: '1px solid rgba(255,255,255,0.18)',
+                    opacity: procesando ? 0.5 : 1,
+                  }}
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  onClick={() => registrarCocina(seleccionados)}
+                  disabled={procesando}
+                  className="flex-1 rounded-2xl text-sm font-semibold text-white flex items-center justify-center gap-2 active:scale-95 transition-all"
+                  style={{
+                    height: '52px',
+                    background: 'linear-gradient(135deg, #3d7a3d, #4ade80)',
+                    boxShadow: '0 0 22px rgba(74,222,128,0.35)',
+                    opacity: procesando ? 0.7 : 1,
+                  }}
+                >
+                  {procesando
+                    ? 'Registrando...'
+                    : `Confirmar${seleccionados.length > 0 ? ` (${seleccionados.length})` : ''}`}
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       <style jsx>{`
         .burbuja {
@@ -358,6 +529,10 @@ export default function PantallaReceta({ params }) {
           15%  { opacity: 0.55; }
           80%  { opacity: 0.3; }
           100% { transform: translateY(-110vh); opacity: 0; }
+        }
+        @keyframes subirModal {
+          from { transform: translate(-50%, 100%); opacity: 0; }
+          to   { transform: translate(-50%, 0);    opacity: 1; }
         }
       `}</style>
     </main>
