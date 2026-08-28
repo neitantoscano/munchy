@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 export default function PantallaGenerar() {
   const router = useRouter()
   const [seleccionado, setSeleccionado] = useState(null)
-  const [porciones, setPorciones] = useState(2)
+  const [porciones, setPorciones] = useState(null)
   const [textoLibre, setTextoLibre] = useState('')
   const [cargando, setCargando] = useState(false)
   const [mensajeIdx, setMensajeIdx] = useState(0)
@@ -72,9 +72,19 @@ export default function PantallaGenerar() {
     return () => clearInterval(interval)
   }, [cargando])
 
+  // Hay que elegir tipo Y porciones. Si es "otro", además escribir algo.
   const puedeGenerar =
     seleccionado &&
+    porciones !== null &&
     (seleccionado !== 'otro' || textoLibre.trim().length > 0)
+
+  // Texto del botón según lo que falte
+  const textoBoton = () => {
+    if (!seleccionado) return 'Selecciona un tipo'
+    if (seleccionado === 'otro' && textoLibre.trim().length === 0) return 'Cuéntame qué quieres'
+    if (porciones === null) return 'Elige para cuántos'
+    return '✨ Generar receta'
+  }
 
   const handleGenerar = async () => {
     if (!puedeGenerar) return
@@ -326,7 +336,7 @@ export default function PantallaGenerar() {
         })}
       </div>
 
-      {/* Selector de porciones */}
+      {/* Selector de porciones — arranca sin nada elegido */}
       <div className="relative z-10 mb-6">
         <p className="text-xs font-bold uppercase tracking-wider text-salmon mb-3">
           ¿Para cuántos?
@@ -347,6 +357,7 @@ export default function PantallaGenerar() {
                     background: activo
                       ? 'rgba(34,211,238,0.16)'
                       : 'linear-gradient(160deg, #2b3244 0%, #1b1f2b 100%)',
+                    boxShadow: activo ? 'inset 0 0 20px rgba(34,211,238,0.18)' : 'none',
                   }}
                 >
                   <p className="text-sm font-bold" style={{ color: activo ? '#22d3ee' : '#FAF9F5' }}>
@@ -412,7 +423,7 @@ export default function PantallaGenerar() {
           border: '1px solid rgba(255,255,255,0.14)',
         }}
       >
-        {puedeGenerar ? '✨ Generar receta' : 'Selecciona un tipo'}
+        {textoBoton()}
         <span>→</span>
       </button>
 
