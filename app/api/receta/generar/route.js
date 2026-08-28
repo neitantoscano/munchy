@@ -4,7 +4,7 @@
 // El texto del chef vive en lib/prompt-chef.js
 
 import { createServerSupabase } from '@/lib/supabase-server'
-import { generarHashCache, calcularPerfilPorcion } from '@/lib/cache-hash'
+import { generarHashCache, calcularPerfilPorcion, normalizarPorciones } from '@/lib/cache-hash'
 import { construirPromptChef } from '@/lib/prompt-chef'
 import { incrementarContadorReceta } from '@/lib/rachas'
 import Anthropic from '@anthropic-ai/sdk'
@@ -54,16 +54,16 @@ function elegirEstilo() {
 }
 
 // ─── Llamada a la IA. Devuelve la receta parseada, o null si falla ───
-async function generarConIA({ tipoComida, textoLibre, estilo, ingredientes, alergias, perfilPorcion }) {
+async function generarConIA({ tipoComida, textoLibre, estilo, ingredientes, alergias, perfilPorcion, porciones }) {
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-  const sistema = construirPromptChef({ tipoComida, estilo, alergias, perfilPorcion })
+  const sistema = construirPromptChef({ tipoComida, estilo, alergias, perfilPorcion, porciones })
 
   const pedidoLibre = tipoComida === 'otro' && textoLibre
     ? `El usuario pidió específicamente: "${textoLibre}".`
     : ''
 
-  const usuario = `Crea una receta de tipo "${tipoComida}".
+  const usuario = `Crea una receta de tipo "${tipoComida}" para ${porciones} persona(s).
 Ingredientes disponibles: ${ingredientes.join(', ')}.
 ${pedidoLibre}`
 
@@ -106,6 +106,9 @@ export async function POST(request) {
     const tipoComida = body.tipo_comida
     const esPrimeraVez = body.es_primera_vez === true
     const textoLibre = (body.texto_libre || '').toString().slice(0, 200)
+
+    // Porciones: 1, 2 o 4. Si no llega o es invalido, usa 2.
+    const porciones = normalizarPorciones(body.porciones)
 
     if (!TIPOS_VALIDOS.includes(tipoComida)) {
       return NextResponse.json(
@@ -166,7 +169,7 @@ export async function POST(request) {
     }
 
     // 6. Generar el hash y buscar en cache
-    const hash = generarHashCache(ingredientesDisponibles, tipoComida, perfilPorcion)
+    const hash = generarHashCache(ingredientesDisponibles, tipoComida, perfilPorcion, porciones)
 
     const { data: cacheHit } = await supabase
       .from('recetas_cache')
@@ -210,7 +213,8 @@ export async function POST(request) {
         estilo,
         ingredientes: ingredientesDisponibles,
         alergias,
-        perfilPorcion
+        perfilPorcion,
+        porciones
       })
 
       if (!recetaIA) {
@@ -221,6 +225,8 @@ export async function POST(request) {
       }
 
       recetaIA.estilo = estilo
+      // Forzamos las porciones pedidas (por si la IA puso otro numero)
+      recetaIA.porciones = porciones
 
       // Seguridad final: si la IA ignoro las alergias, no servimos la receta
       if (contieneAlergeno(recetaIA.ingredientes, alergias)) {
@@ -258,7 +264,7 @@ export async function POST(request) {
         imagen_url: null,
         estilo: recetaFinal.estilo || 'moderna',
         tiempo_minutos: recetaFinal.tiempo_minutos,
-        porciones: recetaFinal.porciones,
+        porciones: recetaFinal.porciones || porciones,
         descripcion: recetaFinal.descripcion,
         ingredientes: recetaFinal.ingredientes,
         ingredientes_pro: recetaFinal.ingredientes_pro || [],
