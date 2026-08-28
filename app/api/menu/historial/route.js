@@ -1,7 +1,8 @@
 // app/api/menu/historial/route.js
 // GET: devuelve lo que el usuario COCINO agrupado por dia.
 // Query: ?rango=semana  (default)  o  ?rango=mes
-// Solo cuenta recetas con cocinada_en distinto de null.
+// Lee de la tabla 'cocinadas': cada vez que se cocina algo es un renglon.
+// Si el usuario cocina la MISMA receta dos veces, aparece dos veces.
 
 import { createServerSupabase } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
@@ -28,7 +29,7 @@ function diaMexico(timestamp) {
   return `${ano}-${mes}-${dia}`
 }
 
-// Resta dias a una fecha "AAAA-MM-DD"
+// Resta dias a una fecha "AAAA-MM-DD". Con dias negativos, suma.
 function restarDias(fechaTexto, dias) {
   const f = new Date(fechaTexto + 'T00:00:00Z')
   f.setUTCDate(f.getUTCDate() - dias)
@@ -65,19 +66,19 @@ export async function GET(request) {
       // Del dia 1 del mes actual hasta hoy
       desde = hoy.substring(0, 8) + '01'
     } else {
-      // Semana en curso: del lunes pasado hasta hoy.
+      // Semana en curso: del lunes hasta hoy.
       // Si hoy es miercoles, son 3 dias (lunes, martes, miercoles).
       const dow = diaDeLaSemana(hoy)
       const diasDesdeLunes = dow === 0 ? 6 : dow - 1
       desde = restarDias(hoy, diasDesdeLunes)
     }
 
-    // 4. Traer las recetas cocinadas en ese rango
-    const { data: recetas, error } = await supabase
-      .from('recetas_generadas')
-      .select('id, titulo, emoji, macros, cocinada_en')
+    // 4. Traer las cocinadas del rango, con los datos de cada receta.
+    //    El join trae titulo, emoji y macros desde recetas_generadas.
+    const { data: cocinadas, error } = await supabase
+      .from('cocinadas')
+      .select('id, receta_id, cocinada_en, recetas_generadas(titulo, emoji, macros)')
       .eq('usuario_id', user.id)
-      .not('cocinada_en', 'is', null)
       .gte('cocinada_en', desde + 'T00:00:00.000Z')
       .order('cocinada_en', { ascending: true })
 
@@ -91,8 +92,12 @@ export async function GET(request) {
     // 5. Agrupar por dia
     const porDia = {}
 
-    for (const r of (recetas || [])) {
-      const dia = diaMexico(r.cocinada_en)
+    for (const c of (cocinadas || [])) {
+      // Si la receta fue borrada, el join viene vacio: la saltamos
+      const r = c.recetas_generadas
+      if (!r) continue
+
+      const dia = diaMexico(c.cocinada_en)
 
       // Descartamos lo que quede fuera del rango por el ajuste de zona horaria
       if (dia < desde || dia > hoy) continue
@@ -105,7 +110,7 @@ export async function GET(request) {
       const prot = Number(r.macros?.proteina_g) || 0
 
       porDia[dia].recetas.push({
-        id: r.id,
+        id: c.receta_id,
         titulo: r.titulo,
         emoji: r.emoji,
         calorias: cal,
