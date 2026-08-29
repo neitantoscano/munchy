@@ -26,7 +26,7 @@ export async function POST(request) {
         process.env.STRIPE_WEBHOOK_SECRET
       )
     } catch (err) {
-      // Firma inválida: no viene de Stripe.
+      // Firma invalida: no viene de Stripe.
       return NextResponse.json({ ok: false, error: 'firma_invalida' }, { status: 400 })
     }
 
@@ -52,7 +52,7 @@ export async function POST(request) {
       }
     }
 
-    // ─── Renovación mensual pagada: extender 30 días más ───
+    // ─── Renovacion mensual pagada: extender 30 dias mas ───
     if (evento.type === 'invoice.payment_succeeded') {
       const factura = evento.data.object
       const customerId = factura.customer
@@ -72,17 +72,39 @@ export async function POST(request) {
     }
 
     // ─── Cobro rechazado: NO se quita el premium ───
-    // Stripe reintenta el cobro varios días. Si al final se rinde,
-    // manda 'customer.subscription.deleted' y ahí sí se apaga.
-    // Solo lo dejamos anotado en los logs de Vercel.
+    // Stripe reintenta el cobro varios dias. Si al final se rinde,
+    // manda 'customer.subscription.deleted' y ahi si se apaga.
     if (evento.type === 'invoice.payment_failed') {
       const factura = evento.data.object
       console.log('COBRO_RECHAZADO:', 'customer=' + factura.customer)
     }
 
-    // ─── Suscripción terminada: apagar premium ───
-    // Único evento que quita el Pro. Llega cuando el usuario canceló
-    // y ya se acabó su mes pagado, o cuando Stripe se rindió de cobrar.
+    // ─── Reembolso emitido: apagar premium ───
+    // Se dispara al apretar "Reembolsar" en el panel de Stripe.
+    // Solo apagamos si el reembolso fue TOTAL. Uno parcial no quita el acceso.
+    if (evento.type === 'charge.refunded') {
+      const cargo = evento.data.object
+      const customerId = cargo.customer
+      const fueTotal = cargo.amount_refunded >= cargo.amount
+
+      if (customerId && fueTotal) {
+        await admin
+          .from('usuarios')
+          .update({
+            es_premium: false,
+            premium_hasta: new Date().toISOString(),
+          })
+          .eq('stripe_customer_id', customerId)
+
+        console.log('REEMBOLSO_TOTAL:', 'customer=' + customerId)
+      } else if (customerId) {
+        console.log('REEMBOLSO_PARCIAL:', 'customer=' + customerId)
+      }
+    }
+
+    // ─── Suscripcion terminada: apagar premium ───
+    // Llega cuando el usuario cancelo y ya se acabo su mes pagado,
+    // o cuando Stripe se rindio de cobrar.
     if (evento.type === 'customer.subscription.deleted') {
       const objeto = evento.data.object
       const customerId = objeto.customer
