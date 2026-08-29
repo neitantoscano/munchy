@@ -9,10 +9,10 @@ export default function PantallaPremium() {
   const [error, setError] = useState('')
 
   const beneficios = [
-    { icono: '🔥', titulo: 'Hasta 20 recetas al día', sub: '10 veces más que el plan gratis' },
+    { icono: '🔥', titulo: '20 recetas diarias', sub: '10 veces más que el plan gratis' },
+    { icono: '📊', titulo: 'Datos de alimentación', sub: 'Calorías, macros y tu menú día por día' },
+    { icono: '✨', titulo: 'Funciones especiales', sub: 'Complementos extras en cada receta' },
     { icono: '⚡', titulo: 'Generación prioritaria', sub: 'Tus recetas se crean más rápido' },
-    { icono: '✨', titulo: 'Ingredientes Pro siempre', sub: 'Sugerencias gourmet en cada receta' },
-    { icono: '🚫', titulo: 'Sin anuncios', sub: 'Experiencia limpia, enfocada en cocinar' },
   ]
 
   const burbujas = [
@@ -99,7 +99,7 @@ export default function PantallaPremium() {
             Munchy Premium
           </h1>
           <p className="text-sm text-crema opacity-70 leading-relaxed max-w-xs">
-            Cocina todos los días sin quedarte sin recetas.
+            20 recetas diarias, datos de tu alimentación y funciones especiales.
           </p>
         </div>
 
@@ -127,7 +127,7 @@ export default function PantallaPremium() {
             Plan mensual
           </p>
           <div className="flex items-baseline gap-1 mb-1">
-            <span className="font-serif text-4xl text-olivoOscuro">$99</span>
+            <span className="font-serif text-4xl text-olivoOscuro">$120</span>
             <span className="text-sm text-olivoOscuro opacity-60">MXN / mes</span>
           </div>
           <p className="text-xs text-olivoOscuro opacity-60">
