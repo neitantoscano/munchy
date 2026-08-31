@@ -92,11 +92,14 @@ export async function POST(request) {
       }
     }
 
-    // 5. Devolver la racha con la forma exacta que espera el frontend
+    // 5. Devolver la racha con la forma exacta que espera el frontend.
+    //    'hito_alcanzado' trae 5, 15, 35, 75 o 100 cuando toca celebrar.
+    //    En cualquier otro caso viene null.
     return NextResponse.json({
       ok: true,
       racha_nueva: resultadoRacha.racha_nueva,
       racha_nueva_record: resultadoRacha.racha_nueva_record,
+      hito_alcanzado: resultadoRacha.hito_alcanzado ?? null,
       ingredientes_quitados: quitados
     })
 
