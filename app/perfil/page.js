@@ -266,7 +266,7 @@ export default function PantallaPerfil() {
         {/* Menú de la semana */}
         <button
           onClick={() => router.push('/menu')}
-          className="w-full rounded-2xl p-4 mb-6 flex items-center gap-3 active:scale-98 transition-transform"
+          className="w-full rounded-2xl p-4 mb-3 flex items-center gap-3 active:scale-98 transition-transform"
           style={{
             background: 'linear-gradient(160deg, #39415a 0%, #262c3d 55%, #171a24 100%)',
             border: '1px solid rgba(74,222,128,0.35)',
@@ -280,6 +280,26 @@ export default function PantallaPerfil() {
           <div className="flex-1 text-left">
             <p className="font-semibold text-base text-crema">Menú de la semana</p>
             <p className="text-xs text-crema opacity-60">Lo que cocinaste, día por día</p>
+          </div>
+          <span className="text-crema opacity-45 text-xl">→</span>
+        </button>
+
+        {/* Permisos y privacidad */}
+        <button
+          onClick={() => router.push('/legal')}
+          className="w-full rounded-2xl p-4 mb-6 flex items-center gap-3 active:scale-98 transition-transform"
+          style={{
+            background: 'linear-gradient(160deg, #39415a 0%, #262c3d 55%, #171a24 100%)',
+            border: '1px solid rgba(120,140,190,0.35)',
+          }}
+        >
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
+               style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.16)' }}>
+            🔒
+          </div>
+          <div className="flex-1 text-left">
+            <p className="font-semibold text-base text-crema">Permisos y privacidad</p>
+            <p className="text-xs text-crema opacity-60">Aviso de privacidad y términos de uso</p>
           </div>
           <span className="text-crema opacity-45 text-xl">→</span>
         </button>
