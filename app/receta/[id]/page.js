@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import CelebracionHito from '../../celebracion-hito'
 
 export default function PantallaReceta({ params }) {
   const router = useRouter()
@@ -12,6 +13,7 @@ export default function PantallaReceta({ params }) {
   const [confetti, setConfetti] = useState(false)
   const [rachaNueva, setRachaNueva] = useState(null)
   const [esRecord, setEsRecord] = useState(false)
+  const [hito, setHito] = useState(null)
 
   // Modal de despensa
   const [candidatos, setCandidatos] = useState([])
@@ -137,7 +139,13 @@ export default function PantallaReceta({ params }) {
         setRachaNueva(data.racha_nueva)
         setEsRecord(!!data.racha_nueva_record)
         setMostrandoModal(false)
-        setConfetti(true)
+
+        // El backend decide si tocó hito. Aquí no calculamos nada.
+        if (data.hito_alcanzado) {
+          setHito(data.hito_alcanzado)
+        } else {
+          setConfetti(true)
+        }
       } else {
         if (data.error === 'sesion_no_encontrada') { router.push('/bienvenida'); return }
         setErrorModal(data.mensaje || 'No pudimos registrarlo. Intenta de nuevo.')
@@ -163,6 +171,16 @@ export default function PantallaReceta({ params }) {
     setMostrandoModal(false)
     setCocinando(false)
     setErrorModal('')
+  }
+
+  // Al cerrar la celebración de hito, pasamos a la pantalla de racha
+  const cerrarHito = () => {
+    setHito(null)
+    setConfetti(true)
+  }
+
+  if (hito) {
+    return <CelebracionHito hito={hito} onCerrar={cerrarHito} />
   }
 
   if (error) {
@@ -482,7 +500,7 @@ export default function PantallaReceta({ params }) {
                 <button
                   onClick={cerrarModal}
                   disabled={procesando}
-                  className="h-13 px-5 rounded-2xl text-sm font-semibold text-crema active:scale-95 transition-transform"
+                  className="px-5 rounded-2xl text-sm font-semibold text-crema active:scale-95 transition-transform"
                   style={{
                     height: '52px',
                     background: 'rgba(255,255,255,0.08)',
