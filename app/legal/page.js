@@ -10,7 +10,7 @@ export default function PantallaLegal() {
   const privacidad = [
     { t: 'Última actualización', p: ['28 de agosto de 2026'] },
     { t: '1. Responsable', p: [
-      'Valentín Sánchez Rodríguez (el "Responsable"), con domicilio en [PENDIENTE: domicilio fiscal completo], es responsable del tratamiento de tus datos personales recabados a través de Munchy (munchy-xi.vercel.app).',
+      'Jesús Sánchez Pioquinto (el "Responsable"), con domicilio en [PENDIENTE: domicilio fiscal completo], es responsable del tratamiento de tus datos personales recabados a través de Munchy (munchy-xi.vercel.app).',
     ]},
     { t: '2. Datos que se recaban', p: [
       'a) Identificación y contacto: correo electrónico, contraseña (cifrada, no visible para el Responsable) y apodo elegido libremente.',
@@ -143,7 +143,7 @@ export default function PantallaLegal() {
         <div className="pt-4 pb-5">
           <h1 className="font-serif text-3xl text-crema leading-tight mb-2">Tus datos y tus derechos</h1>
           <p className="text-sm text-crema opacity-60 leading-relaxed">
-            Responsable: Valentín Sánchez Rodríguez · toscanoneitan@gmail.com
+            Responsable: Jesús Sánchez Pioquinto · toscanoneitan@gmail.com
           </p>
         </div>
 
