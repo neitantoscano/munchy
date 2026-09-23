@@ -11,6 +11,12 @@ export default function PantallaPerfil() {
   const [nuevoApodo, setNuevoApodo] = useState('')
   const [guardando, setGuardando] = useState(false)
 
+  // Nivel de cocina
+  const [nivelCocina, setNivelCocina] = useState(null)
+  const [editandoCocina, setEditandoCocina] = useState(false)
+  const [guardandoCocina, setGuardandoCocina] = useState(false)
+  const [errorCocina, setErrorCocina] = useState('')
+
   // Cancelar Pro
   const [confirmando, setConfirmando] = useState(false)
   const [cancelando, setCancelando] = useState(false)
@@ -31,6 +37,12 @@ export default function PantallaPerfil() {
     ocasional: '🚶 A veces',
     frecuente: '🏃 Frecuente',
     gymrat: '💪 Gym Rat',
+  }
+
+  const cocinas = {
+    basico:   { label: 'Lo básico',     sub: 'Estufa, sartén y microondas' },
+    completo: { label: 'Lo normal',     sub: 'También horno y licuadora' },
+    equipado: { label: 'Tengo de todo', sub: 'Freidora de aire, batidora y más' },
   }
 
   const alergiasLabels = {
@@ -68,9 +80,49 @@ export default function PantallaPerfil() {
     }
   }
 
+  const cargarCocina = async () => {
+    try {
+      // 🔌 BACKEND: lee el nivel de cocina
+      const res = await fetch('/api/usuario/cocina', { cache: 'no-store' })
+      const data = await res.json()
+      if (data.ok) setNivelCocina(data.nivel_cocina || null)
+    } catch (e) {
+      // silencioso
+    }
+  }
+
   useEffect(() => {
     cargarPerfil()
+    cargarCocina()
   }, [])
+
+  const guardarCocina = async (valor) => {
+    if (guardandoCocina) return
+    setGuardandoCocina(true)
+    setErrorCocina('')
+
+    try {
+      // 🔌 BACKEND: actualiza el nivel de cocina
+      const res = await fetch('/api/usuario/cocina', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nivel_cocina: valor }),
+      })
+
+      const data = await res.json()
+
+      if (data.ok) {
+        setNivelCocina(valor)
+        setEditandoCocina(false)
+      } else {
+        if (data.error === 'sin_sesion') { router.push('/login'); return }
+        setErrorCocina(data.mensaje || 'No pudimos guardarlo.')
+      }
+    } catch (e) {
+      setErrorCocina('Sin conexión. Revisa tu internet.')
+    }
+    setGuardandoCocina(false)
+  }
 
   const guardarApodo = async () => {
     if (!nuevoApodo.trim()) return
@@ -318,6 +370,91 @@ export default function PantallaPerfil() {
             <span className="text-white text-xl">→</span>
           </button>
         )}
+
+        {/* Mi cocina — editable */}
+        <div className="rounded-2xl p-4 mb-3"
+             style={{
+               background: 'linear-gradient(160deg, #39415a 0%, #262c3d 55%, #171a24 100%)',
+               border: '1px solid rgba(120,140,190,0.3)',
+             }}>
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-xs font-bold uppercase tracking-wider text-salmon">Mi cocina</p>
+            {!editandoCocina && (
+              <button
+                onClick={() => { setEditandoCocina(true); setErrorCocina('') }}
+                className="text-xs text-crema opacity-60 underline"
+              >
+                Cambiar
+              </button>
+            )}
+          </div>
+
+          {!editandoCocina ? (
+            <>
+              <p className="text-base font-semibold text-crema">
+                {nivelCocina ? cocinas[nivelCocina]?.label : 'Sin elegir'}
+              </p>
+              <p className="text-xs text-crema opacity-55 mt-0.5">
+                {nivelCocina ? cocinas[nivelCocina]?.sub : 'Elige qué herramientas tienes'}
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-xs text-crema opacity-55 mb-3 leading-relaxed">
+                Solo te daremos recetas que puedas hacer con lo que tienes.
+              </p>
+
+              <div className="flex flex-col gap-2 mb-2">
+                {Object.entries(cocinas).map(([id, c]) => {
+                  const activo = nivelCocina === id
+                  return (
+                    <button
+                      key={id}
+                      onClick={() => guardarCocina(id)}
+                      disabled={guardandoCocina}
+                      className="flex items-center gap-3 p-3 rounded-xl text-left active:scale-98 transition-all"
+                      style={{
+                        background: activo ? 'rgba(74,222,128,0.12)' : 'rgba(255,255,255,0.04)',
+                        border: `1px solid ${activo ? 'rgba(74,222,128,0.5)' : 'rgba(255,255,255,0.12)'}`,
+                        opacity: guardandoCocina ? 0.6 : 1,
+                      }}
+                    >
+                      <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden"
+                           style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}>
+                        <img
+                          src={`/icons/icon-cocina-${id}.png`}
+                          alt={c.label}
+                          width={28}
+                          height={28}
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none'
+                            e.currentTarget.parentElement.innerHTML = '<span style="font-size:20px">🍳</span>'
+                          }}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold" style={{ color: activo ? '#4ade80' : '#FAF9F5' }}>{c.label}</p>
+                        <p className="text-[11px] text-crema opacity-55">{c.sub}</p>
+                      </div>
+                      {activo && <span className="text-sm" style={{ color: '#4ade80' }}>✓</span>}
+                    </button>
+                  )
+                })}
+              </div>
+
+              {errorCocina && (
+                <p className="text-xs text-salmon font-medium mb-2">{errorCocina}</p>
+              )}
+
+              <button
+                onClick={() => { setEditandoCocina(false); setErrorCocina('') }}
+                className="w-full text-xs text-crema opacity-55 underline py-2"
+              >
+                Cerrar
+              </button>
+            </>
+          )}
+        </div>
 
         <div className="bg-white rounded-2xl border border-olivoClaro/30 mb-6 overflow-hidden"
              style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
