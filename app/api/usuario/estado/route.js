@@ -1,3 +1,5 @@
+// app/api/usuario/estado/route.js
+
 import { createServerSupabase } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 
@@ -17,7 +19,7 @@ export async function GET() {
     // Leemos los datos del usuario que ya confirmamos que existen en la tabla.
     const { data: perfil, error } = await supabase
       .from('usuarios')
-      .select('apodo, oficio, nivel_ejercicio, es_premium')
+      .select('apodo, oficio, nivel_ejercicio, nivel_cocina, es_premium')
       .eq('id', user.id)
       .maybeSingle()
 
@@ -32,9 +34,13 @@ export async function GET() {
     const tieneApodo = !!perfil?.apodo
     const tieneOficio = !!perfil?.oficio
     const tieneNivelEjercicio = !!perfil?.nivel_ejercicio
+    const tieneNivelCocina = !!perfil?.nivel_cocina
 
-    // "Cuestionario completo" = tiene apodo + oficio + nivel de ejercicio.
-    const cuestionarioCompleto = tieneApodo && tieneOficio && tieneNivelEjercicio
+    // "Cuestionario completo" = oficio + ejercicio + cocina + apodo.
+    // El orden de las pantallas es: oficio → alergias → ejercicio → cocina → apodo.
+    // Si falta la cocina, el usuario debe pasar por /cocina aunque ya tenga lo demás.
+    const cuestionarioCompleto =
+      tieneApodo && tieneOficio && tieneNivelEjercicio && tieneNivelCocina
 
     return NextResponse.json({
       ok: true,
@@ -42,6 +48,7 @@ export async function GET() {
       tiene_apodo: tieneApodo,
       tiene_oficio: tieneOficio,
       tiene_nivel_ejercicio: tieneNivelEjercicio,
+      tiene_nivel_cocina: tieneNivelCocina,
       cuestionario_completo: cuestionarioCompleto,
       es_premium: !!perfil?.es_premium,
     })
