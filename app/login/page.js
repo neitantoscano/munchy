@@ -47,6 +47,7 @@ export default function PantallaLogin() {
 
           if (!estado.tiene_oficio) { router.push('/oficio'); return }
           if (!estado.tiene_nivel_ejercicio) { router.push('/ejercicio'); return }
+          if (!estado.tiene_nivel_cocina) { router.push('/cocina'); return }
           if (!estado.tiene_apodo) { router.push('/apodo'); return }
           router.push('/casa')
         } catch (e) {
