@@ -32,7 +32,7 @@ export default function PantallaEjercicio() {
       const data = await res.json()
 
       if (data.ok) {
-        router.push('/apodo')
+        router.push('/cocina')
       } else {
         setError('Algo salió mal. Intenta de nuevo.')
         setCargando(false)
@@ -63,14 +63,16 @@ export default function PantallaEjercicio() {
       </div>
 
       <div className="relative z-10 flex gap-1 mb-8">
-        <div className="flex-1 h-1 rounded-full" style={{ background: '#3b82f6', boxShadow: '0 0 8px #3b82f6' }}></div>
-        <div className="flex-1 h-1 rounded-full" style={{ background: '#3b82f6', boxShadow: '0 0 8px #3b82f6' }}></div>
-        <div className="flex-1 h-1 rounded-full" style={{ background: '#3b82f6', boxShadow: '0 0 8px #3b82f6' }}></div>
-        <div className="flex-1 h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.15)' }}></div>
+        {[true, true, true, false, false].map((lleno, i) => (
+          <div key={i} className="flex-1 h-1 rounded-full"
+               style={lleno
+                 ? { background: '#3b82f6', boxShadow: '0 0 8px #3b82f6' }
+                 : { background: 'rgba(255,255,255,0.15)' }} />
+        ))}
       </div>
 
       <div className="relative z-10 mb-8">
-        <p className="text-xs font-bold uppercase tracking-wider text-salmon mb-2">Paso 3 de 4</p>
+        <p className="text-xs font-bold uppercase tracking-wider text-salmon mb-2">Paso 3 de 5</p>
         <h1 className="font-serif text-3xl text-crema leading-tight mb-2">¿Te mueves?</h1>
         <p className="text-base text-crema opacity-70 leading-relaxed">Ajustamos las recetas a tu nivel de actividad.</p>
       </div>
