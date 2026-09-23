@@ -4,7 +4,7 @@
 // El texto del chef vive en lib/prompt-chef.js
 
 import { createServerSupabase } from '@/lib/supabase-server'
-import { generarHashCache, calcularPerfilPorcion, normalizarPorciones } from '@/lib/cache-hash'
+import { generarHashCache, calcularPerfilPorcion, normalizarPorciones, normalizarCocina } from '@/lib/cache-hash'
 import { construirPromptChef } from '@/lib/prompt-chef'
 import { incrementarContadorReceta } from '@/lib/rachas'
 import Anthropic from '@anthropic-ai/sdk'
@@ -54,10 +54,10 @@ function elegirEstilo() {
 }
 
 // ─── Llamada a la IA. Devuelve la receta parseada, o null si falla ───
-async function generarConIA({ tipoComida, textoLibre, estilo, ingredientes, alergias, perfilPorcion, porciones }) {
+async function generarConIA({ tipoComida, textoLibre, estilo, ingredientes, alergias, perfilPorcion, porciones, nivelCocina }) {
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-  const sistema = construirPromptChef({ tipoComida, estilo, alergias, perfilPorcion, porciones })
+  const sistema = construirPromptChef({ tipoComida, estilo, alergias, perfilPorcion, porciones, nivelCocina })
 
   const pedidoLibre = tipoComida === 'otro' && textoLibre
     ? `El usuario pidió específicamente: "${textoLibre}".`
@@ -117,10 +117,10 @@ export async function POST(request) {
       )
     }
 
-    // 3. Leer datos del usuario (premium + contador + perfil)
+    // 3. Leer datos del usuario (premium + contador + perfil + cocina)
     const { data: usuario, error: errUsuario } = await supabase
       .from('usuarios')
-      .select('es_premium, recetas_hoy, fecha_contador, oficio, nivel_ejercicio')
+      .select('es_premium, recetas_hoy, fecha_contador, oficio, nivel_ejercicio, nivel_cocina')
       .eq('id', user.id)
       .single()
 
@@ -141,6 +141,10 @@ export async function POST(request) {
 
     // Perfil de porcion: agrupa oficio + ejercicio en ligero / normal / alto
     const perfilPorcion = calcularPerfilPorcion(usuario.oficio, usuario.nivel_ejercicio)
+
+    // Nivel de cocina: basico / completo / equipado.
+    // Si el usuario nunca lo eligio (null), se asume 'completo'.
+    const nivelCocina = normalizarCocina(usuario.nivel_cocina)
 
     // 4. Leer alergias del usuario
     const { data: alergiasData } = await supabase
@@ -169,7 +173,7 @@ export async function POST(request) {
     }
 
     // 6. Generar el hash y buscar en cache
-    const hash = generarHashCache(ingredientesDisponibles, tipoComida, perfilPorcion, porciones)
+    const hash = generarHashCache(ingredientesDisponibles, tipoComida, perfilPorcion, porciones, nivelCocina)
 
     const { data: cacheHit } = await supabase
       .from('recetas_cache')
@@ -214,7 +218,8 @@ export async function POST(request) {
         ingredientes: ingredientesDisponibles,
         alergias,
         perfilPorcion,
-        porciones
+        porciones,
+        nivelCocina
       })
 
       if (!recetaIA) {
