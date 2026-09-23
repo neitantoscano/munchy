@@ -32,9 +32,10 @@ export default function PortadaMunchy() {
           return
         }
 
-        // 3) Si le falta algo, al paso pendiente
+        // 3) Si le falta algo, al paso pendiente (en orden del flujo)
         if (!data.tiene_oficio) { router.replace('/oficio'); return }
         if (!data.tiene_nivel_ejercicio) { router.replace('/ejercicio'); return }
+        if (!data.tiene_nivel_cocina) { router.replace('/cocina'); return }
         if (!data.tiene_apodo) { router.replace('/apodo'); return }
 
         router.replace('/casa')
