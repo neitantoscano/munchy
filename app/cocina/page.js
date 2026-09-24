@@ -112,7 +112,7 @@ export default function PantallaCocina() {
             <button
               key={n.id}
               onClick={() => setSeleccionado(n.id)}
-              className="flex items-start gap-4 p-4 rounded-2xl text-left transition-all active:scale-98"
+              className="flex items-center gap-4 p-4 rounded-2xl text-left transition-all active:scale-98"
               style={{
                 background: activo
                   ? 'rgba(74,222,128,0.12)'
@@ -121,34 +121,30 @@ export default function PantallaCocina() {
                 boxShadow: activo ? '0 0 22px rgba(74,222,128,0.25)' : '0 4px 18px rgba(0,0,0,0.5)',
               }}
             >
-              {/* 📌 ESPACIO PARA EL LOGO DE POLO: public/icons/icon-cocina-{id}.png */}
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden"
-                   style={{
-                     background: activo ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.06)',
-                     border: `1px solid ${activo ? 'rgba(74,222,128,0.4)' : 'rgba(255,255,255,0.14)'}`,
-                   }}>
+              {/* 📌 LOGO: public/icons/icon-cocina-{id}.png — sin recuadro, grande */}
+              <div className="w-24 h-24 flex items-center justify-center flex-shrink-0">
                 <img
                   src={`/icons/icon-cocina-${n.id}.png`}
                   alt={n.label}
-                  width={40}
-                  height={40}
+                  className="w-24 h-24 object-contain"
+                  style={{ filter: activo ? `drop-shadow(0 0 14px ${n.neon}80)` : 'none' }}
                   onError={(e) => {
                     e.currentTarget.style.display = 'none'
-                    e.currentTarget.parentElement.innerHTML = `<span style="font-size:28px">${n.icono}</span>`
+                    e.currentTarget.parentElement.innerHTML = `<span style="font-size:52px">${n.icono}</span>`
                   }}
                 />
               </div>
 
-              <div className="flex-1 pt-0.5">
+              <div className="flex-1 min-w-0">
                 <p className="font-semibold text-base mb-0.5"
                    style={{ color: activo ? '#4ade80' : '#FAF9F5' }}>
                   {n.label}
                 </p>
-                <p className="text-sm text-crema opacity-70 mb-1.5">{n.sub}</p>
+                <p className="text-sm text-crema opacity-70 mb-1.5 leading-snug">{n.sub}</p>
                 <p className="text-[11px] text-crema opacity-45 leading-snug">{n.detalle}</p>
               </div>
 
-              <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-1 transition-all"
+              <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 transition-all"
                    style={{
                      background: activo ? '#4ade80' : 'transparent',
                      border: `2px solid ${activo ? '#4ade80' : 'rgba(255,255,255,0.25)'}`,
