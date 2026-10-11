@@ -18,7 +18,8 @@ export async function GET() {
       .order('created_at', { ascending: true })
 
     if (error) {
-      return NextResponse.json({ ok: false, error: 'lectura_fallo', mensaje: error.message }, { status: 500 })
+      console.error('despensa leer:', error.message)
+      return NextResponse.json({ ok: false, error: 'lectura_fallo', mensaje: 'No pudimos leer tu despensa' }, { status: 500 })
     }
 
     return NextResponse.json({ ok: true, ingredientes: data })

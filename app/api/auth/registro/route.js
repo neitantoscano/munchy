@@ -50,7 +50,7 @@ export async function POST(request) {
 
     if (error) {
       return NextResponse.json(
-        { ok: false, error: 'registro_fallo', mensaje: error.message },
+        { ok: false, error: 'registro_fallo', mensaje: 'No pudimos crear tu cuenta' },
         { status: 400 }
       )
     }

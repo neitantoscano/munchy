@@ -1,6 +1,9 @@
 import { createServerSupabase } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 
+// Límite del texto libre del ingrediente
+const INGREDIENTE_MAX = 60
+
 // ─── PATCH: actualizar el texto de un ingrediente de la despensa ───
 export async function PATCH(request) {
   try {
@@ -11,29 +14,47 @@ export async function PATCH(request) {
       return NextResponse.json({ ok: false, error: 'sin_sesion' }, { status: 401 })
     }
 
-    const body = await request.json()
+    const body = await request.json().catch(() => ({}))
     const id = body?.id
-    const ingrediente = body?.ingrediente
 
-    // El id y el nuevo texto son obligatorios
-    if (!id) {
+    if (!id || typeof id !== 'string') {
       return NextResponse.json({ ok: false, error: 'falta_id' }, { status: 400 })
     }
-    if (!ingrediente || ingrediente.trim() === '') {
+
+    // Tiene que ser texto. Si mandan un número u objeto, .trim() reventaría.
+    if (typeof body?.ingrediente !== 'string') {
       return NextResponse.json({ ok: false, error: 'falta_ingrediente' }, { status: 400 })
+    }
+
+    const ingrediente = body.ingrediente.trim()
+
+    if (ingrediente === '') {
+      return NextResponse.json({ ok: false, error: 'falta_ingrediente' }, { status: 400 })
+    }
+
+    if (ingrediente.length > INGREDIENTE_MAX) {
+      return NextResponse.json(
+        { ok: false, error: 'texto_muy_largo', mensaje: `Máximo ${INGREDIENTE_MAX} caracteres` },
+        { status: 400 }
+      )
     }
 
     // Actualiza solo si el ingrediente es de este usuario (seguridad)
     const { data, error } = await supabase
       .from('despensa')
-      .update({ ingrediente: ingrediente.trim() })
+      .update({ ingrediente: ingrediente })
       .eq('id', id)
       .eq('usuario_id', user.id)
       .select('id, ingrediente')
-      .single()
+      .maybeSingle()
 
     if (error) {
-      return NextResponse.json({ ok: false, error: 'actualizar_fallo', mensaje: error.message }, { status: 500 })
+      // El detalle va a los logs de Vercel, no al usuario.
+      console.error('despensa actualizar:', error.message, error.code)
+      return NextResponse.json(
+        { ok: false, error: 'actualizar_fallo', mensaje: 'No pudimos actualizar el ingrediente' },
+        { status: 500 }
+      )
     }
 
     if (!data) {

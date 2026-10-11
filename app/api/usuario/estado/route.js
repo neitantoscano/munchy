@@ -25,7 +25,7 @@ export async function GET() {
 
     if (error) {
       return NextResponse.json(
-        { ok: false, error: 'lectura_fallo', mensaje: error.message },
+        { ok: false, error: 'lectura_fallo', mensaje: 'No pudimos leer tu perfil' },
         { status: 500 }
       )
     }

@@ -26,7 +26,8 @@ export async function DELETE(request) {
       .eq('usuario_id', user.id)
 
     if (error) {
-      return NextResponse.json({ ok: false, error: 'borrar_fallo', mensaje: error.message }, { status: 500 })
+      console.error('despensa eliminar:', error.message)
+      return NextResponse.json({ ok: false, error: 'borrar_fallo', mensaje: 'No pudimos eliminar el ingrediente' }, { status: 500 })
     }
 
     return NextResponse.json({ ok: true })

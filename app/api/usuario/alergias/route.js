@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server'
 const ALERGIAS_VALIDAS = ['lactosa', 'gluten', 'nueces', 'mariscos', 'otro']
 
 // ─── POST: guardar las alergias del usuario ───
+// Reemplaza la lista completa: borra las anteriores e inserta las nuevas.
 export async function POST(request) {
   try {
     const supabase = await createServerSupabase()
@@ -14,18 +15,26 @@ export async function POST(request) {
       return NextResponse.json({ ok: false, error: 'sin_sesion' }, { status: 401 })
     }
 
-    const body = await request.json()
+    const body = await request.json().catch(() => ({}))
     const lista = body?.alergias
 
     if (!Array.isArray(lista)) {
-      return NextResponse.json({ ok: false, error: 'formato_invalido', recibido: body }, { status: 400 })
+      return NextResponse.json({ ok: false, error: 'formato_invalido' }, { status: 400 })
+    }
+
+    // Tope de seguridad: solo hay 5 alergias posibles, nunca puede llegar más.
+    if (lista.length > ALERGIAS_VALIDAS.length) {
+      return NextResponse.json({ ok: false, error: 'lista_muy_larga' }, { status: 400 })
     }
 
     for (const a of lista) {
       if (!ALERGIAS_VALIDAS.includes(a)) {
-        return NextResponse.json({ ok: false, error: 'alergia_invalida', valor: a }, { status: 400 })
+        return NextResponse.json({ ok: false, error: 'alergia_invalida' }, { status: 400 })
       }
     }
+
+    // Quitamos repetidos: la misma alergia dos veces no aporta nada.
+    const unicas = [...new Set(lista)]
 
     // Borrar las alergias anteriores (para no duplicar)
     const { error: errorBorrar } = await supabase
@@ -34,46 +43,41 @@ export async function POST(request) {
       .eq('usuario_id', user.id)
 
     if (errorBorrar) {
-      return NextResponse.json({
-        ok: false,
-        error: 'borrado_fallo',
-        mensaje: errorBorrar.message,
-        detalle: errorBorrar.details || null,
-        pista: errorBorrar.hint || null,
-        codigo: errorBorrar.code || null,
-      }, { status: 500 })
+      // El detalle va a los logs de Vercel, nunca al usuario:
+      // los mensajes internos de la base revelan cómo está armada.
+      console.error('alergias borrar:', errorBorrar.message, errorBorrar.code)
+      return NextResponse.json(
+        { ok: false, error: 'borrado_fallo', mensaje: 'No pudimos guardar tus alergias' },
+        { status: 500 }
+      )
     }
 
-    if (lista.length === 0) {
+    if (unicas.length === 0) {
       return NextResponse.json({ ok: true, alergias: [] })
     }
 
     // Insertar las nuevas alergias
-    const filas = lista.map((tipo) => ({ usuario_id: user.id, tipo: tipo }))
+    const filas = unicas.map((tipo) => ({ usuario_id: user.id, tipo: tipo }))
 
     const { error: errorInsertar } = await supabase
       .from('alergias')
       .insert(filas)
 
     if (errorInsertar) {
-      return NextResponse.json({
-        ok: false,
-        error: 'insertar_fallo',
-        mensaje: errorInsertar.message,
-        detalle: errorInsertar.details || null,
-        pista: errorInsertar.hint || null,
-        codigo: errorInsertar.code || null,
-      }, { status: 500 })
+      console.error('alergias insertar:', errorInsertar.message, errorInsertar.code)
+      return NextResponse.json(
+        { ok: false, error: 'insertar_fallo', mensaje: 'No pudimos guardar tus alergias' },
+        { status: 500 }
+      )
     }
 
-    return NextResponse.json({ ok: true, alergias: lista })
+    return NextResponse.json({ ok: true, alergias: unicas })
 
   } catch (err) {
-    return NextResponse.json({
-      ok: false,
-      error: 'servidor',
-      mensaje: err?.message || 'Algo salió mal',
-    }, { status: 500 })
+    return NextResponse.json(
+      { ok: false, error: 'servidor', mensaje: 'Algo salió mal' },
+      { status: 500 }
+    )
   }
 }
 
@@ -93,23 +97,22 @@ export async function GET() {
       .eq('usuario_id', user.id)
 
     if (error) {
-      return NextResponse.json({
-        ok: false,
-        error: 'lectura_fallo',
-        mensaje: error.message,
-        codigo: error.code || null,
-      }, { status: 500 })
+      console.error('alergias leer:', error.message, error.code)
+      return NextResponse.json(
+        { ok: false, error: 'lectura_fallo', mensaje: 'No pudimos leer tus alergias' },
+        { status: 500 }
+      )
     }
 
-    const lista = data.map((fila) => fila.tipo)
-
-    return NextResponse.json({ ok: true, alergias: lista })
+    return NextResponse.json({
+      ok: true,
+      alergias: (data || []).map((a) => a.tipo),
+    })
 
   } catch (err) {
-    return NextResponse.json({
-      ok: false,
-      error: 'servidor',
-      mensaje: err?.message || 'Algo salió mal',
-    }, { status: 500 })
+    return NextResponse.json(
+      { ok: false, error: 'servidor', mensaje: 'Algo salió mal' },
+      { status: 500 }
+    )
   }
 }

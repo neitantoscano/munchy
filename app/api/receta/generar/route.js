@@ -160,9 +160,9 @@ export async function POST(request) {
     } else {
       const { data: despensaData } = await supabase
         .from('despensa')
-        .select('nombre_ingrediente')
+        .select('ingrediente')
         .eq('usuario_id', user.id)
-      ingredientesDisponibles = (despensaData || []).map((d) => d.nombre_ingrediente)
+      ingredientesDisponibles = (despensaData || []).map((d) => d.ingrediente)
 
       if (ingredientesDisponibles.length === 0) {
         return NextResponse.json(

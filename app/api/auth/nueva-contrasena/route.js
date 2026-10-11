@@ -53,7 +53,7 @@ export async function POST(request) {
 
     if (error) {
       return NextResponse.json(
-        { ok: false, error: 'cambio_fallo', mensaje: error.message },
+        { ok: false, error: 'cambio_fallo', mensaje: 'No pudimos cambiar tu contrasena' },
         { status: 400 }
       )
     }

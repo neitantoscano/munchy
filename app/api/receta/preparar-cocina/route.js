@@ -50,7 +50,7 @@ export async function POST(request) {
     // 3. Traer la despensa del usuario
     const { data: despensa, error: errDespensa } = await supabase
       .from('despensa')
-      .select('id, nombre_ingrediente')
+      .select('id, ingrediente')
       .eq('usuario_id', user.id)
 
     if (errDespensa) {
@@ -64,13 +64,13 @@ export async function POST(request) {
     //    Coincide si un nombre contiene al otro (jitomate ≈ jitomate bola).
     const candidatos = (despensa || [])
       .filter((item) => {
-        const nom = String(item.nombre_ingrediente || '').toLowerCase().trim()
+        const nom = String(item.ingrediente || '').toLowerCase().trim()
         if (!nom) return false
         return nombresReceta.some((r) => nom.includes(r) || r.includes(nom))
       })
       .map((item) => ({
         id: item.id,
-        nombre: item.nombre_ingrediente
+        nombre: item.ingrediente
       }))
 
     return NextResponse.json({
