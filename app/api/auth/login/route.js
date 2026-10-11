@@ -1,5 +1,13 @@
 import { createServerSupabase } from '@/lib/supabase-server'
+import { obtenerIP, revisarLimite, respuestaLimite } from '@/lib/rate-limit'
 import { NextResponse } from 'next/server'
+
+// Límites: 8 intentos por IP y 5 por correo, en 15 minutos.
+// Dos llaves a propósito: una red compartida (escuela, café) no debe
+// bloquear a todos, pero un correo concreto sí se protege más fuerte.
+const MAX_POR_IP = 8
+const MAX_POR_CORREO = 5
+const VENTANA_MIN = 15
 
 // Inicia sesión con correo + contraseña de una cuenta ya existente.
 export async function POST(request) {
@@ -24,6 +32,19 @@ export async function POST(request) {
         { ok: false, error: 'datos_incompletos', mensaje: 'Escribe tu correo y contraseña' },
         { status: 400 }
       )
+    }
+
+    // ─── Límite de intentos ───
+    const ip = obtenerIP(request)
+
+    const porIP = await revisarLimite(ip, 'login_ip', MAX_POR_IP, VENTANA_MIN)
+    if (!porIP.permitido) {
+      return NextResponse.json(respuestaLimite(VENTANA_MIN), { status: 429 })
+    }
+
+    const porCorreo = await revisarLimite(correo, 'login_correo', MAX_POR_CORREO, VENTANA_MIN)
+    if (!porCorreo.permitido) {
+      return NextResponse.json(respuestaLimite(VENTANA_MIN), { status: 429 })
     }
 
     const { data, error } = await supabase.auth.signInWithPassword({

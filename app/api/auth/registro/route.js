@@ -1,6 +1,12 @@
 import { createServerSupabase } from '@/lib/supabase-server'
 import { createAdminSupabase } from '@/lib/supabase-admin'
+import { obtenerIP, revisarLimite, respuestaLimite } from '@/lib/rate-limit'
 import { NextResponse } from 'next/server'
+
+// Limite: 5 cuentas nuevas por IP en 60 minutos.
+// Sin esto, un bot podria crear miles de cuentas basura.
+const MAX_POR_IP = 5
+const VENTANA_MIN = 60
 
 // Crea una cuenta nueva con correo + contraseña.
 // La fila en 'usuarios' se escribe con el cliente admin, porque al momento
@@ -43,6 +49,13 @@ export async function POST(request) {
       )
     }
 
+    // Limite de cuentas nuevas por IP
+    const ip = obtenerIP(request)
+    const porIP = await revisarLimite(ip, 'registro_ip', MAX_POR_IP, VENTANA_MIN)
+    if (!porIP.permitido) {
+      return NextResponse.json(respuestaLimite(VENTANA_MIN), { status: 429 })
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email: correo,
       password: contrasena,
@@ -72,8 +85,9 @@ export async function POST(request) {
       .upsert({ id: userId, correo: correo }, { onConflict: 'id' })
 
     if (errorPerfil) {
+      console.error('auth registro perfil:', errorPerfil.message)
       return NextResponse.json(
-        { ok: false, error: 'perfil_fallo', mensaje: errorPerfil.message },
+        { ok: false, error: 'perfil_fallo', mensaje: 'No pudimos crear tu perfil' },
         { status: 500 }
       )
     }
